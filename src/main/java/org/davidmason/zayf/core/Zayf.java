@@ -18,6 +18,8 @@
  */
 package org.davidmason.zayf.core;
 
+import org.davidmason.zayf.ui.ZayfView;
+
 /**
  * Zayf entry point
  */
@@ -26,7 +28,8 @@ public class Zayf
 
    public static void main(String[] args)
    {
-      //FIXME: invoke UI
+      ZayfView syncView = new ZayfView();
+      syncView.setUpUI();
 
       System.out.println("\ndone\n");
    }
