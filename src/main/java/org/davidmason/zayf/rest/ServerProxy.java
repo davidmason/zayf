@@ -42,6 +42,8 @@ import org.zanata.rest.dto.resource.TranslationsResource;
 
 /**
  * Provides a proxy to a Zanata server
+ * 
+ * @see {@link ServerProxyExample}
  */
 public class ServerProxy
 {

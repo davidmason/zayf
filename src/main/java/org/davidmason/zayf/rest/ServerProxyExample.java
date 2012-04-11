@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.List;
 
 import org.zanata.rest.dto.Project;
+import org.zanata.rest.dto.ProjectIteration;
 import org.zanata.rest.dto.resource.ResourceMeta;
 import org.zanata.rest.dto.resource.TextFlow;
 
@@ -39,49 +40,41 @@ public class ServerProxyExample
     */
    public static void main(String[] args) throws MalformedURLException, URISyntaxException
    {
-      //These have to match values for the test server
-      String realProjectOnServer = "validation";
-      String realVersionOnServer = "1";
-      String realDocumentOnServer = "subdir/testing0";
-      //      String realLocaleIdOnServer = "de";
-
-      // Note: when all methods are communicating with the server properly,
-      // these could all be chained together
-
+      //      ServerProxy sp = new DummyServerProxy();
       ServerProxy sp =
             new ServerProxy(new URL("http://localhost:8080/zanata/").toURI(), "admin",
                             "REDACTED");
 
-      System.out.println("\ngetting project list");
+      System.out.println("\nGetting project list");
       List<Project> projects = sp.getProjectList();
       for (Project project : projects)
       {
-         System.out.println("id: " + project.getId() + " name: " + project.getName() + " desc: "
-                            + project.getDescription());
+         System.out.println("\tid: '" + project.getId() + "' name: '" + project.getName()
+                            + "' desc: '" + project.getDescription() + "'");
       }
 
-      System.out.println("\ngetting version list for '" + projects.get(0).getId() + "'");
-      List<String> versions = sp.getVersionList(projects.get(0).getId());
-      for (String version : versions)
+      System.out.println("\nGetting version list for '" + projects.get(0).getId() + "'");
+      List<ProjectIteration> versions = sp.getVersionList(projects.get(0).getId());
+      for (ProjectIteration version : versions)
       {
-         System.out.println("version: " + version);
+         System.out.println("\tversion: '" + version.getId() + "'");
       }
 
-      System.out.println("\ngetting document list for project '" + realProjectOnServer
-                         + "' version '" + realVersionOnServer + "'");
-      List<ResourceMeta> docs = sp.getDocList(realProjectOnServer, realVersionOnServer);
-      System.out.println("Documents: " + docs.size());
+      System.out.println("\nGetting document list for project '" + projects.get(0).getId()
+                         + "' version '" + versions.get(0).getId() + "'");
+      List<ResourceMeta> docs = sp.getDocList(projects.get(0).getId(), versions.get(0).getId());
+      System.out.println("\tDocuments: " + docs.size());
       for (ResourceMeta doc : docs)
       {
-         System.out.println(doc.getName());
+         System.out.println("\t\t" + doc.getName());
       }
 
-      System.out.println("\ngetting text flows for document '" + realDocumentOnServer + "'");
+      System.out.println("\nGetting text flows for document '" + docs.get(0).getName() + "'");
       List<TextFlow> flows =
-            sp.getTextFlows(realProjectOnServer, realVersionOnServer, realDocumentOnServer);
+            sp.getTextFlows(projects.get(0).getId(), versions.get(0).getId(), docs.get(0).getName());
       for (TextFlow tf : flows)
       {
-         System.out.println("content: " + tf.getContent());
+         System.out.println("\tcontent: '" + tf.getContent() + "'");
       }
 
       /* temporarily disabled, need to sort out encoding issue
@@ -93,7 +86,7 @@ public class ServerProxyExample
       }
       */
 
-      System.out.println("finished");
+      System.out.println("\nfinished");
    }
 
 }
