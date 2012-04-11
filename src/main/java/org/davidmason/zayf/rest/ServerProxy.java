@@ -22,15 +22,17 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.jboss.resteasy.client.ClientResponse;
-import org.zanata.common.EntityStatus;
 import org.zanata.common.LocaleId;
+import org.zanata.rest.client.IProjectResource;
+import org.zanata.rest.client.IProjectsResource;
 import org.zanata.rest.client.ITranslationResources;
 import org.zanata.rest.client.ZanataProxyFactory;
 import org.zanata.rest.dto.Project;
+import org.zanata.rest.dto.ProjectIteration;
 import org.zanata.rest.dto.VersionInfo;
 import org.zanata.rest.dto.resource.Resource;
 import org.zanata.rest.dto.resource.ResourceMeta;
@@ -52,6 +54,12 @@ public class ServerProxy
    private ZanataProxyFactory requestFactory;
 
    /**
+    * Included to allow dummy proxy instantiation without server request
+    */
+   ServerProxy()
+   {}
+
+   /**
     * Create a new server proxy for a given server
     * 
     * @param serverURI
@@ -63,72 +71,41 @@ public class ServerProxy
     */
    public ServerProxy(URI serverURI, String userName, String apiKey)
    {
+      this(serverURI, userName, apiKey, false);
+   }
+
+   public ServerProxy(URI serverURI, String userName, String apiKey, boolean debugLogging)
+   {
       this.serverURI = serverURI;
 
       requestFactory =
             new ZanataProxyFactory(serverURI, userName, apiKey,
-                                   new VersionInfo(SERVER_VERSION, SERVER_BUILD_TIMESTAMP));
-      /*
-              new ZanataProxyFactory(new URL("http://localhost:8080/zanata/").toURI(), 
-                                     "admin",
-                                     "REDACTED", 
-                                     new VersionInfo("1.5.0", "unknown"));
-      */
+                                   new VersionInfo(SERVER_VERSION, SERVER_BUILD_TIMESTAMP),
+                                   debugLogging);
    }
-
-   // TODO add constructor with flag to make a pure dummy version, or make a
-   // subclass with dummy implementation
 
    /**
     * Get a list of projects on the server.
-    * 
-    * FIXME Currently returns dummy data
     * 
     * @return a list of all active and read-only projects on the server
     */
    public List<Project> getProjectList()
    {
-      /* FIXME this should work, but gives 404, may need to update library code
-      URI projectsUri = getProjectsURI(serverURI);
-      System.out.println("Projects URI: " + projectsUri);
-      IProjectsResource projectListResource = requestFactory.getProjects(serverURI);
+      IProjectsResource projectListResource = requestFactory.getProjects(getRestURI(serverURI));
 
       ClientResponse<Project[]> projectListResponse = projectListResource.get();
       if (projectListResponse.getStatus() >= 399)
       {
-         //TODO throw specific useful exception
-          System.out.println("Got error response code: " + projectListResponse.getStatus());
-          throw new RuntimeException("Got error response code retrieving project list: " + projectListResponse.getStatus());
+         //FIXME throw specific useful exception
+         System.out.println("Got error response code: " + projectListResponse.getStatus());
+         throw new RuntimeException("Got error response code retrieving project list: "
+                                    + projectListResponse.getStatus());
       }
       else
       {
-          return Arrays.asList(projectListResponse.getEntity()); //new ArrayList<Project>
+         return Arrays.asList(projectListResponse.getEntity());
       }
-      */
 
-      ArrayList<Project> projects = new ArrayList<Project>();
-
-      Project proj1 = new Project();
-      proj1.setId("dummy1");
-      proj1.setName("Dummy Project 1");
-      proj1.setDescription("A dummy project created for testing");
-      proj1.setStatus(EntityStatus.ACTIVE);
-      projects.add(proj1);
-
-      Project proj2 = new Project();
-      proj2.setId("dummy2");
-      proj2.setName("Dummy Project 2");
-      proj2.setDescription("Another dummy project created for testing");
-      proj2.setStatus(EntityStatus.ACTIVE);
-      projects.add(proj2);
-
-      Project proj3 = new Project();
-      proj3.setId("dummy3");
-      proj3.setName("Dummy Project 3");
-      proj3.setDescription("A read-only dummy project created for testing");
-      proj3.setStatus(EntityStatus.READONLY);
-      projects.add(proj3);
-      return projects;
    }
 
    /**
@@ -138,15 +115,21 @@ public class ServerProxy
     *           identifying slug for the project
     * @return list of version slugs
     */
-   public List<String> getVersionList(String projectSlug)
+   public List<ProjectIteration> getVersionList(String projectSlug)
    {
-      // FIXME looks like our rest interface doesn't have any way to discover this
-      // information. Will need to update the interface to provide it
-      List<String> versions = new ArrayList<String>();
-      versions.add(projectSlug + "-v1");
-      versions.add(projectSlug + "-v2");
-      versions.add(projectSlug + "-v3");
-      return versions;
+      IProjectResource projectResource = requestFactory.getProject(projectSlug);
+      ClientResponse<Project> response = projectResource.get();
+      if (response.getStatus() >= 399)
+      {
+         //FIXME throw specific useful exception
+         System.out.println("Got error response code: " + response.getStatus());
+         throw new RuntimeException("Got error response code retrieving projec: "
+                                    + response.getStatus());
+      }
+      else
+      {
+         return response.getEntity().getIterations();
+      }
    }
 
    /**
@@ -199,12 +182,11 @@ public class ServerProxy
    private static String RESOURCE_PREFIX = "rest";
 
    //TODO move this method into ZanataProxyFactory
-   public static URI getProjectsURI(URI baseURI)
+   public static URI getRestURI(URI baseURI)
    {
-      String spec = RESOURCE_PREFIX + "/projects";
       try
       {
-         return new URL(baseURI.toURL(), spec).toURI();
+         return new URL(baseURI.toURL(), RESOURCE_PREFIX).toURI();
       }
       catch (MalformedURLException e)
       {
