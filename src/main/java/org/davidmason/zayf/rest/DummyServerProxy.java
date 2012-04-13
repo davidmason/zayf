@@ -84,6 +84,8 @@ public class DummyServerProxy extends ServerProxy
    public List<ResourceMeta> getDocList(String projectSlug, String versionSlug)
    {
       List<ResourceMeta> docs = new ArrayList<ResourceMeta>();
+      docs.add(new ResourceMeta(projectSlug));
+      docs.add(new ResourceMeta(versionSlug));
       docs.add(new ResourceMeta("doc1"));
       docs.add(new ResourceMeta("doc2"));
       docs.add(new ResourceMeta("path/doc3"));
