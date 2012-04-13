@@ -18,6 +18,8 @@
  */
 package org.davidmason.zayf.core;
 
+import javax.swing.JFrame;
+
 import org.davidmason.zayf.ui.ZayfView;
 
 /**
@@ -26,11 +28,15 @@ import org.davidmason.zayf.ui.ZayfView;
 public class Zayf
 {
 
+   private static final String ZAYF_VERSION = "0.00001";
+
    public static void main(String[] args)
    {
       ZayfView syncView = new ZayfView();
-      syncView.setUpUI();
+      syncView.setTitle("Zayf v" + ZAYF_VERSION);
+      syncView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      //syncView.setUrl("http://www.HeyBuddy.com");
+      syncView.setVisible(true);
 
-      System.out.println("\ndone\n");
    }
 }
