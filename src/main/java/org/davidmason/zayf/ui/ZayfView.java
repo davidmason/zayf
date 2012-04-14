@@ -22,12 +22,13 @@ import org.zanata.rest.dto.*;
 import org.zanata.rest.dto.resource.*;
 import org.davidmason.zayf.rest.*;
 
+import javax.swing.*;
+import javax.swing.event.*;
+
+import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
-import java.util.List;
-
-import javax.swing.*;
 
 /**
  * Swing UI for Zayf client
@@ -64,6 +65,9 @@ public class ZayfView extends JFrame
       setUpLabels();
       addElements();
 
+      refreshVersionsButton.setVisible(false);
+      refreshDocsButton.setVisible(false);
+
       setUpServerProxy();
    }
 
@@ -94,77 +98,69 @@ public class ZayfView extends JFrame
       refreshDocsButton = new JButton("Refresh");
       //refreshVersionsButton.setEnabled(false);
       //refreshDocsButton.setEnabled(false);
+      /*
       projectsList.setEnabled(false);
       versionsList.setEnabled(false);
+      */
 
-      //TODO: action listeners for double clicking JLists/ListModels
+      ///////////////////////////////////////////////////////////////////////////////////////
       refreshProjectsButton.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            projectsListModel.clear();
-            versionsListModel.clear();
-            docsListModel.clear();
+            refreshProjects();
+         }
+      });
+      //-----------------------------------------------------------------------------------//
+      /*projectsList.addMouseListener(new MouseAdapter() {
+         public void mouseClicked (MouseEvent e) {
+               refreshVersions();
+      }});*/
+      //-----------------------------------------------------------------------------------//
+      projectsList.getSelectionModel().addListSelectionListener(new ListSelectionListener()
+      {
 
-            projects = serverProxy.getProjectList();
-
-            for (Project project : projects)
-               projectsListModel.addElement(project.getName());
-
-            projectsList.setEnabled(true);
-            versionsList.setEnabled(false);
-            docsList.setEnabled(false);
-            //TODO: on select event for projectsList, refreshVersionsButton.setEnabled(true);refreshDocsButton.setEnabled(false);
+         public void valueChanged(ListSelectionEvent e)
+         {
+            refreshVersions();
          }
       });
 
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////   
+      ///////////////////////////////////////////////////////////////////////////////////////
       refreshVersionsButton.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            versionsListModel.clear();
-            docsListModel.clear();
+            refreshVersions();
+         }
+      });
+      //-----------------------------------------------------------------------------------//
+      /*
+      versionsList.addMouseListener(new MouseAdapter() {
+         public void mouseClicked (MouseEvent e) {
+               refreshDocs();
+      }});*/
+      //-----------------------------------------------------------------------------------//
+      versionsList.getSelectionModel().addListSelectionListener(new ListSelectionListener()
+      {
 
-            if (projectsList.getSelectedIndex() == -1)
-               return; //TODO: error dialog - must select a project
-            versions =
-                  serverProxy.getVersionList(projects.get(projectsList.getSelectedIndex()).getId());
-
-            for (ProjectIteration version : versions)
-               versionsListModel.addElement(version.getId());
-
-            projectsList.setEnabled(false);
-            versionsList.setEnabled(true);
-            docsList.setEnabled(false);
+         public void valueChanged(ListSelectionEvent e)
+         {
+            refreshDocs();
          }
       });
 
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      ///////////////////////////////////////////////////////////////////////////////////////
       refreshDocsButton.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            docsListModel.clear();
-
-            if (versionsList.getSelectedIndex() == -1)
-               return; //TODO: error dialog - must select a version
-            docs = serverProxy.getDocList(projects.get(projectsList.getSelectedIndex()).getId(),
-                                          versions.get(versionsList.getSelectedIndex()).getId());
-
-            for (ResourceMeta doc : docs)
-               docsListModel.addElement(doc.getName());
-
-            projectsList.setEnabled(false);
-            versionsList.setEnabled(false);
-            docsList.setEnabled(true);
+            refreshDocs();
          }
       });
-
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       int buttonsY = 70, refreshProjectsButtonX = 70, refreshVersionsButtonX = 270, refreshDocsButtonX =
             470, buttonsSizeX = 80, buttonsSizeY = 20;
@@ -205,8 +201,6 @@ public class ZayfView extends JFrame
       //      JScrollPane listScroller = new JScrollPane(projectsList);
       //   listScroller.setPreferredSize(new Dimension(250, 80));            
 
-      //////////////////////////////////////////////////////////////////////
-
       versionsListModel = new DefaultListModel();
       versionsList = new JList(versionsListModel);
       versionsList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
@@ -225,9 +219,6 @@ public class ZayfView extends JFrame
       projectsList.setBounds(projectsListX, listsY, listsSizeX, listsSizeY);
       versionsList.setBounds(versionsListX, listsY, listsSizeX, listsSizeY);
       docsList.setBounds(docsListX, listsY, listsSizeX, listsSizeY);
-
-      //////////////////////////////////////////////////////////////////////
-
    }
 
    /**
@@ -251,4 +242,86 @@ public class ZayfView extends JFrame
       this.urlTextField.setText(url);
    }
 
+   /**
+    * get projects from server
+    */
+   public void refreshProjects()
+   {
+      projectsListModel.clear();
+      versionsListModel.clear();
+      docsListModel.clear();
+
+      projects = serverProxy.getProjectList();
+
+      for (Project project : projects)
+         projectsListModel.addElement(project.getName());
+
+      /*
+      projectsList.setEnabled(true);
+      versionsList.setEnabled(false);
+      docsList.setEnabled(false);
+      */
+
+      /* this code not functionally compatible with selection events - cascades
+      projectsList.requestFocusInWindow();
+      if (projectsListModel.getSize() > 0)
+         projectsList.setSelectedIndex(0);
+      */
+   }
+
+   /**
+    * get versions for project
+    */
+   public void refreshVersions()
+   {
+      versionsListModel.clear();
+      docsListModel.clear();
+
+      if (projectsList.getSelectedIndex() == -1)
+         return; //TODO: error dialog - must select a project
+      versions = serverProxy.getVersionList(projects.get(projectsList.getSelectedIndex()).getId());
+
+      for (ProjectIteration version : versions)
+         versionsListModel.addElement(version.getId());
+
+      /*
+      projectsList.setEnabled(false);
+      versionsList.setEnabled(true);
+      docsList.setEnabled(false);
+      */
+
+      /* this code not functionally compatible with selection events - cascades
+      versionsList.requestFocusInWindow();
+      if (versionsListModel.getSize() > 0)
+         versionsList.setSelectedIndex(0);
+      */
+   }
+
+   /**
+    * get documents for version
+    */
+   public void refreshDocs()
+   {
+      docsListModel.clear();
+
+      if (versionsList.getSelectedIndex() == -1)
+         return; //TODO: error dialog - must select a version
+      docs = serverProxy.getDocList(projects.get(projectsList.getSelectedIndex()).getId(),
+                                    versions.get(versionsList.getSelectedIndex()).getId());
+
+      for (ResourceMeta doc : docs)
+         docsListModel.addElement(doc.getName());
+
+      /*
+      projectsList.setEnabled(false);
+      versionsList.setEnabled(false);
+      docsList.setEnabled(true);
+      */
+
+      /* this code not functionally compatible with selection events - cascades
+      docsList.requestFocusInWindow();
+      if (docsListModel.getSize() > 0)
+         docsList.setSelectedIndex(0);
+      */
+   }
 }
