@@ -25,6 +25,7 @@ import org.davidmason.zayf.rest.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import java.util.*;
 import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
@@ -40,16 +41,16 @@ public class ZayfView extends JFrame
 
    private JTextField urlTextField;
    //TODO: add status bar
-   private JButton refreshProjectsButton, refreshVersionsButton, refreshDocsButton;
-   private JList projectsList, versionsList, docsList;
-   private DefaultListModel projectsListModel, versionsListModel, docsListModel;
+
+   private JButton connectButton;
+   private JComboBox projectsComboBox, versionsComboBox, docsComboBox;
    private JLabel ProjectsLabel, VersionsLabel, DocsLabel;
    private DummyServerProxy serverProxy;
    private List<Project> projects;
    private List<ProjectIteration> versions;
    private List<ResourceMeta> docs;
 
-   public ZayfView() throws MalformedURLException, URISyntaxException
+   public ZayfView() //throws MalformedURLException, URISyntaxException
    {
       setLayout(null); //use absolute positioning
       setBounds(0, 0, 640, 480);
@@ -57,16 +58,12 @@ public class ZayfView extends JFrame
       setLocationRelativeTo(null); //centre screen
 
       urlTextField = new JTextField("http://localhost:8080/zanata/");
-      urlTextField.setPreferredSize(new Dimension(300, 20));
       urlTextField.setBounds(10, 10, 300, 20);
 
-      setUpLists();
       setUpButtons();
+      setUpComboBoxes();
       setUpLabels();
       addElements();
-
-      refreshVersionsButton.setVisible(false);
-      refreshDocsButton.setVisible(false);
 
       setUpServerProxy();
    }
@@ -77,97 +74,143 @@ public class ZayfView extends JFrame
    private void addElements()
    {
       add(urlTextField);
-      add(projectsList);
-      add(versionsList);
-      add(docsList);
-      add(refreshProjectsButton);
-      add(refreshVersionsButton);
-      add(refreshDocsButton);
+      add(connectButton);
       add(ProjectsLabel);
       add(VersionsLabel);
       add(DocsLabel);
+      add(projectsComboBox);
+      add(versionsComboBox);
+      add(docsComboBox);
    }
 
    /**
-    * create buttons and add action listeners
+    * set up buttons
     */
    private void setUpButtons()
    {
-      refreshProjectsButton = new JButton("Refresh");
-      refreshVersionsButton = new JButton("Refresh");
-      refreshDocsButton = new JButton("Refresh");
-      //refreshVersionsButton.setEnabled(false);
-      //refreshDocsButton.setEnabled(false);
-      /*
-      projectsList.setEnabled(false);
-      versionsList.setEnabled(false);
-      */
-
-      ///////////////////////////////////////////////////////////////////////////////////////
-      refreshProjectsButton.addActionListener(new ActionListener()
+      connectButton = new JButton("Connect");
+      connectButton.setBounds(312, 10, 100, 20);
+      connectButton.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            refreshProjects();
-         }
-      });
-      //-----------------------------------------------------------------------------------//
-      /*projectsList.addMouseListener(new MouseAdapter() {
-         public void mouseClicked (MouseEvent e) {
-               refreshVersions();
-      }});*/
-      //-----------------------------------------------------------------------------------//
-      projectsList.getSelectionModel().addListSelectionListener(new ListSelectionListener()
-      {
-
-         public void valueChanged(ListSelectionEvent e)
-         {
-            refreshVersions();
+            connectToServer();
          }
       });
 
-      ///////////////////////////////////////////////////////////////////////////////////////
-      refreshVersionsButton.addActionListener(new ActionListener()
+   }
+
+   private void connectToServer()
+   {
+      setUpServerProxy();
+
+      getProjects();
+   }
+
+   /**
+    * get projects from server and populate comboBox
+    */
+   private void getProjects()
+   {
+      //if (serverProxy.not connected) return;
+
+      projects = serverProxy.getProjectList();
+
+      projectsComboBox.setEnabled(true);
+      projectsComboBox.removeAllItems();
+      for (Project project : projects)
+         projectsComboBox.addItem(project.getName());
+   }
+
+   /**
+    * get versions from server and populate comboBox
+    */
+   private void getVersions()
+   {
+      if (projectsComboBox.getSelectedIndex() < 0)
+         return;
+
+      versions = serverProxy.getVersionList(
+                            projectsComboBox.getSelectedItem().toString());
+
+      versionsComboBox.setEnabled(true);
+      versionsComboBox.removeAllItems();
+      for (ProjectIteration version : versions)
+         versionsComboBox.addItem(version.getId());
+
+   }
+
+   /**
+    * get docs from server and populate comboBox
+    */
+   private void getDocs()
+   {
+      if (versionsComboBox.getSelectedIndex() < 0)
+         return;
+
+      docs = serverProxy.getDocList(projectsComboBox.getSelectedItem().toString(),
+                                    versionsComboBox.getSelectedItem().toString());
+
+      docsComboBox.setEnabled(true);
+      docsComboBox.removeAllItems();
+      for (ResourceMeta doc : docs)
+         docsComboBox.addItem(doc.getName());
+   }
+
+   /**
+    * set up comboBoxes
+    */
+   private void setUpComboBoxes()
+   {
+      projectsComboBox = new JComboBox();
+      projectsComboBox.setBounds(50, 70, 150, 20);
+      projectsComboBox.addItem(new String("Projects"));
+
+      projectsComboBox.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            refreshVersions();
-         }
-      });
-      //-----------------------------------------------------------------------------------//
-      /*
-      versionsList.addMouseListener(new MouseAdapter() {
-         public void mouseClicked (MouseEvent e) {
-               refreshDocs();
-      }});*/
-      //-----------------------------------------------------------------------------------//
-      versionsList.getSelectionModel().addListSelectionListener(new ListSelectionListener()
-      {
-
-         public void valueChanged(ListSelectionEvent e)
-         {
-            refreshDocs();
+            getVersions();
          }
       });
 
-      ///////////////////////////////////////////////////////////////////////////////////////
-      refreshDocsButton.addActionListener(new ActionListener()
+      projectsComboBox.setEnabled(false);
+      /*projectsComboBox.addPopupMenuListener(new PopupMenuListener() {
+         public void popupMenuWillBecomeVisible(PopupMenuEvent e) {dynamic drop-down would go here}
+         public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
+         public void popupMenuCanceled(PopupMenuEvent e) {}
+      });*/
+
+      versionsComboBox = new JComboBox();
+      versionsComboBox.setBounds(250, 70, 150, 20);
+      versionsComboBox.addItem(new String("Versions"));
+
+      versionsComboBox.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            refreshDocs();
+            getDocs();
          }
       });
 
-      int buttonsY = 70, refreshProjectsButtonX = 70, refreshVersionsButtonX = 270, refreshDocsButtonX =
-            470, buttonsSizeX = 80, buttonsSizeY = 20;
+      versionsComboBox.setEnabled(false);
 
-      refreshProjectsButton.setBounds(refreshProjectsButtonX, buttonsY, buttonsSizeX, buttonsSizeY);
-      refreshVersionsButton.setBounds(refreshVersionsButtonX, buttonsY, buttonsSizeX, buttonsSizeY);
-      refreshDocsButton.setBounds(refreshDocsButtonX, buttonsY, buttonsSizeX, buttonsSizeY);
+      docsComboBox = new JComboBox();
+      docsComboBox.setBounds(450, 70, 150, 20);
+      docsComboBox.addItem(new String("Documents"));
+
+      docsComboBox.addActionListener(new ActionListener()
+      {
+
+         public void actionPerformed(ActionEvent e)
+         {
+            /**/}
+      });
+
+      docsComboBox.setEnabled(false);
    }
 
    /**
@@ -175,11 +218,11 @@ public class ZayfView extends JFrame
     */
    private void setUpLabels()
    {
-      ProjectsLabel = new JLabel("Projects");
-      VersionsLabel = new JLabel("Versions");
-      DocsLabel = new JLabel("Documents");
+      ProjectsLabel = new JLabel("Project");
+      VersionsLabel = new JLabel("Version");
+      DocsLabel = new JLabel("Document");
 
-      int labelsY = 40, projectsLabelX = 85, versionsLabelX = 285, docsLabelX = 480, labelsSizeX =
+      int labelsY = 50, projectsLabelX = 85, versionsLabelX = 285, docsLabelX = 480, labelsSizeX =
             80, labelsSizeY = 20;
 
       ProjectsLabel.setBounds(projectsLabelX, labelsY, labelsSizeX, labelsSizeY);
@@ -188,43 +231,9 @@ public class ZayfView extends JFrame
    }
 
    /**
-    * set up JLists
-    */
-   private void setUpLists()
-   {
-      projectsListModel = new DefaultListModel();
-      projectsList = new JList(projectsListModel);
-      projectsList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-      projectsList.setLayoutOrientation(JList.VERTICAL);
-      projectsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-      //      JScrollPane listScroller = new JScrollPane(projectsList);
-      //   listScroller.setPreferredSize(new Dimension(250, 80));            
-
-      versionsListModel = new DefaultListModel();
-      versionsList = new JList(versionsListModel);
-      versionsList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-      versionsList.setLayoutOrientation(JList.VERTICAL);
-      versionsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-      docsListModel = new DefaultListModel();
-      docsList = new JList(docsListModel);
-      docsList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-      docsList.setLayoutOrientation(JList.VERTICAL);
-      docsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-      int listsY = 100, projectsListX = 40, versionsListX = 240, docsListX = 440, listsSizeX = 150, listsSizeY =
-            300;
-
-      projectsList.setBounds(projectsListX, listsY, listsSizeX, listsSizeY);
-      versionsList.setBounds(versionsListX, listsY, listsSizeX, listsSizeY);
-      docsList.setBounds(docsListX, listsY, listsSizeX, listsSizeY);
-   }
-
-   /**
     * init serverProxy
     */
-   private void setUpServerProxy() throws MalformedURLException, URISyntaxException
+   private void setUpServerProxy()
    {
       serverProxy = new DummyServerProxy();
       //TODO: update status bar: connecting...
@@ -247,14 +256,14 @@ public class ZayfView extends JFrame
     */
    public void refreshProjects()
    {
-      projectsListModel.clear();
+      /*projectsListModel.clear();
       versionsListModel.clear();
-      docsListModel.clear();
+      docsListModel.clear();*/
 
       projects = serverProxy.getProjectList();
 
-      for (Project project : projects)
-         projectsListModel.addElement(project.getName());
+      /*for (Project project : projects)
+         projectsListModel.addElement(project.getName());*/
 
       /*
       projectsList.setEnabled(true);
@@ -274,16 +283,15 @@ public class ZayfView extends JFrame
     */
    public void refreshVersions()
    {
-      versionsListModel.clear();
+      /*versionsListModel.clear();
       docsListModel.clear();
-
-      if (projectsList.getSelectedIndex() == -1)
-         return; //TODO: error dialog - must select a project
+      
+      if (projectsList.getSelectedIndex() == -1) return; //TODO: error dialog - must select a project
       versions = serverProxy.getVersionList(projects.get(projectsList.getSelectedIndex()).getId());
 
       for (ProjectIteration version : versions)
          versionsListModel.addElement(version.getId());
-
+      */
       /*
       projectsList.setEnabled(false);
       versionsList.setEnabled(true);
@@ -302,16 +310,15 @@ public class ZayfView extends JFrame
     */
    public void refreshDocs()
    {
-      docsListModel.clear();
+      /*docsListModel.clear();
 
-      if (versionsList.getSelectedIndex() == -1)
-         return; //TODO: error dialog - must select a version
-      docs = serverProxy.getDocList(projects.get(projectsList.getSelectedIndex()).getId(),
-                                    versions.get(versionsList.getSelectedIndex()).getId());
-
+      if (versionsList.getSelectedIndex() == -1) return; //TODO: error dialog - must select a version
+      docs = serverProxy.getDocList(   projects.get(projectsList.getSelectedIndex()).getId(),
+                              versions.get(versionsList.getSelectedIndex()).getId());
+      
       for (ResourceMeta doc : docs)
          docsListModel.addElement(doc.getName());
-
+      */
       /*
       projectsList.setEnabled(false);
       versionsList.setEnabled(false);
