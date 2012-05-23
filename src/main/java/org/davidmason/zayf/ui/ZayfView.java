@@ -66,6 +66,11 @@ public class ZayfView extends JFrame
       addElements();
 
       setUpServerProxy();
+
+      setTitle("Zayf v 0.00000001");
+      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      //syncView.setUrl("http://www.HeyBuddy.com");
+      setVisible(true);
    }
 
    /**

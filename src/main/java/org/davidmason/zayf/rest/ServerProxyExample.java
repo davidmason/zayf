@@ -40,10 +40,8 @@ public class ServerProxyExample
     */
    public static void main(String[] args) throws MalformedURLException, URISyntaxException
    {
-      //      ServerProxy sp = new DummyServerProxy();
-      ServerProxy sp =
-            new ServerProxy(new URL("http://localhost:8080/zanata/").toURI(), "admin",
-                            "REDACTED");
+      ServerProxy sp = new DummyServerProxy();
+      //ServerProxy sp = new ServerProxy(new URL("http://localhost:8080/zanata/").toURI(), "admin", "REDACTED");
 
       System.out.println("\nGetting project list");
       List<Project> projects = sp.getProjectList();
