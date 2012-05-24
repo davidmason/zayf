@@ -18,8 +18,6 @@
  */
 package org.davidmason.zayf.persistence;
 
-//import org.davidmason.zayf.rest.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,8 +56,6 @@ public class DummyProject
 
       project.setIterations(versions);
 
-      //pi1.
-
       return project;
    }
 
@@ -84,28 +80,28 @@ public class DummyProject
       flows.add(new TextFlow("id3", loc, "Dummy text flow 3 dummy text flow 3 dummy text flow 3"));
       return flows;
    }
-   /*
-      public List<TextFlowTarget> getTargets(String projectSlug, String versionSlug, LocaleId locale, String docId)
-      {
-         List<TextFlowTarget> translations = new ArrayList<TextFlowTarget>();
 
-         TextFlowTarget tft1 = new TextFlowTarget("id1");
+   public static List<TextFlowTarget> getTargets(String projectSlug, String versionSlug,
+                                                 LocaleId locale, String docId)
+   {
+      List<TextFlowTarget> translations = new ArrayList<TextFlowTarget>();
 
-         tft1.setContent("Dummy german translation 1");
-         tft1.setState(ContentState.Approved);
-         translations.add(tft1);
+      TextFlowTarget tft1 = new TextFlowTarget("id1");
 
-         TextFlowTarget tft2 = new TextFlowTarget("id2");
-         tft2.setContent("Dummy german translation 2");
-         tft2.setState(ContentState.NeedReview);
-         translations.add(tft2);
+      tft1.setContent("Dummy german translation 1");
+      tft1.setState(ContentState.Approved);
+      translations.add(tft1);
 
-         TextFlowTarget tft3 = new TextFlowTarget("id3");
-         tft3.setContent("");
-         tft3.setState(ContentState.New);
-         translations.add(tft3);
+      TextFlowTarget tft2 = new TextFlowTarget("id2");
+      tft2.setContent("Dummy german translation 2");
+      tft2.setState(ContentState.NeedReview);
+      translations.add(tft2);
 
-         return translations;
-      }
-   */
+      TextFlowTarget tft3 = new TextFlowTarget("id3");
+      tft3.setContent("");
+      tft3.setState(ContentState.New);
+      translations.add(tft3);
+
+      return translations;
+   }
 }

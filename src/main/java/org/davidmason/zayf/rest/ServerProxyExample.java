@@ -28,6 +28,7 @@ import org.zanata.rest.dto.ProjectIteration;
 import org.zanata.rest.dto.resource.ResourceMeta;
 import org.zanata.rest.dto.resource.TextFlow;
 
+@SuppressWarnings("unused")
 public class ServerProxyExample
 {
 

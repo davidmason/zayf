@@ -26,20 +26,21 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import java.util.*;
+//import java.util.*;
 import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.*;
+//import java.io.File;
+//import java.io.FileWriter;
+//import java.io.IOException;
+import java.net.URL;
 
 /**
  * Swing UI for Zayf client
  * 
  * @author A.S.
  */
+@SuppressWarnings({"serial", "unused"})
 public class ZayfView extends JFrame
 {
 
@@ -47,6 +48,9 @@ public class ZayfView extends JFrame
 
    private JTree displayTree;
    private DefaultMutableTreeNode root;
+   private JScrollPane treeView;
+
+   private StatusBar statusBar;
 
    private ServerProxy serverProxy;
    private String url = "http://localhost:8080/zanata/";
@@ -70,8 +74,7 @@ public class ZayfView extends JFrame
 
       addComponents();
 
-      setUpServerProxy();
-      getProjects();
+      connectToServer();
 
       setTitle("Zayf v 0.00000001");
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -86,7 +89,8 @@ public class ZayfView extends JFrame
       root = new DefaultMutableTreeNode(url);
 
       displayTree = new JTree(root);
-      JScrollPane treeView = new JScrollPane(displayTree);
+      //displayTree.setPreferredSize(new Dimension(200,0));
+      treeView = new JScrollPane(displayTree);
 
       displayTree.addTreeExpansionListener(new TreeExpansionListener()
       {
@@ -115,8 +119,10 @@ public class ZayfView extends JFrame
       topPanel.add(menuBar, BorderLayout.NORTH);
 
       add(topPanel, BorderLayout.NORTH);
+      add(treeView, BorderLayout.WEST);
 
-      add(displayTree, BorderLayout.WEST);
+      statusBar = new StatusBar();
+      add(statusBar, BorderLayout.SOUTH);
    }
 
    /** set up the menu bar */
@@ -133,21 +139,21 @@ public class ZayfView extends JFrame
       JMenu menu = new JMenu("File");
       menu.setMnemonic(KeyEvent.VK_F);
 
-      JMenuItem menuItem = new JMenuItem("Connect...", KeyEvent.VK_N);
+      JMenuItem menuItem = new JMenuItem("Connect...", KeyEvent.VK_C);
       menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, ActionEvent.CTRL_MASK));
+      //TODO: figure out why shortcut only works when menu has focus, fix
       menuItem.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            //TODO:
+            openNewConnectionFrame();
          }
       });
 
       menu.add(menuItem);
 
       menuItem = new JMenuItem("Disconnect", KeyEvent.VK_D);
-      //menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
       menuItem.addActionListener(new ActionListener()
       {
 
@@ -208,7 +214,7 @@ public class ZayfView extends JFrame
       projects = serverProxy.getProjectList();
 
       displayTree = new JTree(root);
-      JScrollPane treeView = new JScrollPane(displayTree);
+      treeView = new JScrollPane(displayTree);
 
       for (Project project : projects)
       {
@@ -241,13 +247,36 @@ public class ZayfView extends JFrame
       }
    }
 
+   /** opens a modal dialog which allows the user to connect to a database */
+   private void openNewConnectionFrame()
+   {
+      NewConnectionFrame ncf = new NewConnectionFrame();
+
+      if (ncf.connectPressed())
+      {
+         try
+         {
+            //TODO: if connected, disconnect (if SP can force disconnect)
+
+            //serverProxy = new ServerProxy(new URL(ncf.getUrl()).toURI(), ncf.getUserName(), ncf.getApiKey());
+            serverProxy = new DummyServerProxy();
+            statusBar.setConnection("Connected", new Color(0, 120, 0));
+         }
+         catch (Exception e)
+         {
+            statusBar.setConnection("Connection Failed", Color.RED);
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Connection Failed", 0);
+         }
+      }
+   }
+
    /**
     * init serverProxy
     */
    private void setUpServerProxy()
    {
       serverProxy = new DummyServerProxy();
-      //TODO: update status bar: connecting...
+      statusBar.setConnection("Connected", new Color(0, 120, 0));
       //ServerProxy sp = new ServerProxy(new URL(url).toURI(), userName, apiKey);
    }
 
