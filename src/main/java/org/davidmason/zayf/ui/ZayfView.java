@@ -201,7 +201,7 @@ public class ZayfView extends JFrame
    }
 
    /**
-    * get projects from server and populate comboBox
+    * get projects from server and populate tree
     */
    private void getProjects()
    {
@@ -215,6 +215,29 @@ public class ZayfView extends JFrame
          DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project.getName());
          root.add(projectBranch);
 
+         //TODO: load child nodes on expansion only.
+         for (ProjectIteration iteration : serverProxy.getVersionList(project.getId())) //get iterations from SP
+         {
+            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(iteration.getId());
+            projectBranch.add(iterationBranch);
+
+            for (ResourceMeta doc : serverProxy.getDocList(project.getId(), iteration.getId())) //get docs from SP
+            {
+               DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(doc.getName());
+               iterationBranch.add(docBranch);
+
+               for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(),
+                                                           doc.getName()))
+               {
+                  DefaultMutableTreeNode tfNode = new DefaultMutableTreeNode(tf.getId());
+                  docBranch.add(tfNode);
+               }
+
+               //TODO: find out if must/should specify locale when querying for TFT's
+               //if should only show one language at a time, will use text panes to show TF & TFT
+               //for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(), locale, docId))
+            }
+         }
       }
    }
 
