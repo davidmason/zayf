@@ -1,0 +1,16 @@
+<ns2:project type="IterationProject" id="dummy1" xmlns:ns2="http://zanata.org/namespace/api/">
+    <name>Dummy Project 1</name>
+    <description>A dummy project created for testing</description>
+    <project-iterations>
+        <ns2:project-iteration id="Dummy Project 1-v1">
+            <status>ACTIVE</status>
+        </ns2:project-iteration>
+        <ns2:project-iteration id="Dummy Project 1-v2">
+            <status>ACTIVE</status>
+        </ns2:project-iteration>
+        <ns2:project-iteration id="Dummy Project 1-v3">
+            <status>READONLY</status>
+        </ns2:project-iteration>
+    </project-iterations>
+    <status>ACTIVE</status>
+</ns2:project>
