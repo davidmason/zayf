@@ -24,11 +24,15 @@ import org.davidmason.zayf.rest.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import java.util.*;
 import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.*;
 
 /**
@@ -39,71 +43,154 @@ import java.net.*;
 public class ZayfView extends JFrame
 {
 
-   private JTextField urlTextField;
-   //TODO: add status bar
+   private JMenuBar menuBar;
 
-   private JButton connectButton;
-   private JComboBox projectsComboBox, versionsComboBox, docsComboBox;
-   private JLabel ProjectsLabel, VersionsLabel, DocsLabel;
-   private DummyServerProxy serverProxy;
+   private JTree displayTree;
+   private DefaultMutableTreeNode root;
+
+   private ServerProxy serverProxy;
+   private String url = "http://localhost:8080/zanata/";
+   private String userName = "admin";
+   private String apiKey = "REDACTED";
+
    private List<Project> projects;
-   private List<ProjectIteration> versions;
+   private List<ProjectIteration> iterations;
    private List<ResourceMeta> docs;
+   private List<TextFlow> textFlows;
+   private List<TextFlowTarget> textFlowTargets;
 
    public ZayfView() //throws MalformedURLException, URISyntaxException
    {
-      setLayout(null); //use absolute positioning
+      setLayout(new BorderLayout()); //use absolute positioning
       setBounds(0, 0, 640, 480);
-      setResizable(false);
       setLocationRelativeTo(null); //centre screen
 
-      urlTextField = new JTextField("http://localhost:8080/zanata/");
-      urlTextField.setBounds(10, 10, 300, 20);
+      setUpMenus();
+      setUpTree();
 
-      setUpButtons();
-      setUpComboBoxes();
-      setUpLabels();
-      addElements();
+      addComponents();
 
       setUpServerProxy();
+      getProjects();
 
       setTitle("Zayf v 0.00000001");
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      //syncView.setUrl("http://www.HeyBuddy.com");
       setVisible(true);
+   }
+
+   /**
+    * set up Tree view
+    */
+   private void setUpTree()
+   {
+      root = new DefaultMutableTreeNode(url);
+
+      displayTree = new JTree(root);
+      JScrollPane treeView = new JScrollPane(displayTree);
+
+      displayTree.addTreeExpansionListener(new TreeExpansionListener()
+      {
+
+         @Override
+         public void treeExpanded(TreeExpansionEvent event)
+         {
+            // TODO Auto-generated method stub
+         }
+
+         @Override
+         public void treeCollapsed(TreeExpansionEvent event)
+         {
+            // TODO Auto-generated method stub
+         }
+      });
    }
 
    /**
     * add Swing components to frame
     */
-   private void addElements()
+   private void addComponents()
    {
-      add(urlTextField);
-      add(connectButton);
-      add(ProjectsLabel);
-      add(VersionsLabel);
-      add(DocsLabel);
-      add(projectsComboBox);
-      add(versionsComboBox);
-      add(docsComboBox);
+      JPanel topPanel = new JPanel(new BorderLayout());
+
+      topPanel.add(menuBar, BorderLayout.NORTH);
+
+      add(topPanel, BorderLayout.NORTH);
+
+      add(displayTree, BorderLayout.WEST);
    }
 
-   /**
-    * set up buttons
-    */
-   private void setUpButtons()
+   /** set up the menu bar */
+   private void setUpMenus()
    {
-      connectButton = new JButton("Connect");
-      connectButton.setBounds(312, 10, 100, 20);
-      connectButton.addActionListener(new ActionListener()
+      menuBar = new JMenuBar();
+
+      setUpFileMenu();
+   }
+
+   /** set up File menu and add to menu bar */
+   private void setUpFileMenu()
+   {
+      JMenu menu = new JMenu("File");
+      menu.setMnemonic(KeyEvent.VK_F);
+
+      JMenuItem menuItem = new JMenuItem("Connect...", KeyEvent.VK_N);
+      menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, ActionEvent.CTRL_MASK));
+      menuItem.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            connectToServer();
+            //TODO:
          }
       });
 
+      menu.add(menuItem);
+
+      menuItem = new JMenuItem("Disconnect", KeyEvent.VK_D);
+      //menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+      menuItem.addActionListener(new ActionListener()
+      {
+
+         public void actionPerformed(ActionEvent e)
+         {
+            //TODO:
+         }
+      });
+
+      menu.add(menuItem);
+
+      menuItem = new JMenuItem("Save Project...", KeyEvent.VK_S);
+      menuItem.addActionListener(new ActionListener()
+      {
+
+         public void actionPerformed(ActionEvent e)
+         {
+            //TODO:
+         }
+      });
+
+      menu.add(menuItem);
+
+      menuItem = new JMenuItem("Exit", KeyEvent.VK_X);
+      menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, ActionEvent.ALT_MASK));
+      menuItem.addActionListener(new ActionListener()
+      {
+
+         public void actionPerformed(ActionEvent e)
+         {
+            quit();
+         }
+      });
+
+      menu.add(menuItem);
+
+      menuBar.add(menu);
+   }
+
+   private void quit()
+   {
+      //TODO: cleanup
+      System.exit(0);
    }
 
    private void connectToServer()
@@ -118,121 +205,17 @@ public class ZayfView extends JFrame
     */
    private void getProjects()
    {
-      //if (serverProxy.not connected) return;
-
       projects = serverProxy.getProjectList();
 
-      projectsComboBox.setEnabled(true);
-      projectsComboBox.removeAllItems();
+      displayTree = new JTree(root);
+      JScrollPane treeView = new JScrollPane(displayTree);
+
       for (Project project : projects)
-         projectsComboBox.addItem(project.getName());
-   }
-
-   /**
-    * get versions from server and populate comboBox
-    */
-   private void getVersions()
-   {
-      if (projectsComboBox.getSelectedIndex() < 0)
-         return;
-
-      versions = serverProxy.getVersionList(
-                            projectsComboBox.getSelectedItem().toString());
-
-      versionsComboBox.setEnabled(true);
-      versionsComboBox.removeAllItems();
-      for (ProjectIteration version : versions)
-         versionsComboBox.addItem(version.getId());
-
-   }
-
-   /**
-    * get docs from server and populate comboBox
-    */
-   private void getDocs()
-   {
-      if (versionsComboBox.getSelectedIndex() < 0)
-         return;
-
-      docs = serverProxy.getDocList(projectsComboBox.getSelectedItem().toString(),
-                                    versionsComboBox.getSelectedItem().toString());
-
-      docsComboBox.setEnabled(true);
-      docsComboBox.removeAllItems();
-      for (ResourceMeta doc : docs)
-         docsComboBox.addItem(doc.getName());
-   }
-
-   /**
-    * set up comboBoxes
-    */
-   private void setUpComboBoxes()
-   {
-      projectsComboBox = new JComboBox();
-      projectsComboBox.setBounds(50, 70, 150, 20);
-      projectsComboBox.addItem(new String("Projects"));
-
-      projectsComboBox.addActionListener(new ActionListener()
       {
+         DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project.getName());
+         root.add(projectBranch);
 
-         public void actionPerformed(ActionEvent e)
-         {
-            getVersions();
-         }
-      });
-
-      projectsComboBox.setEnabled(false);
-      /*projectsComboBox.addPopupMenuListener(new PopupMenuListener() {
-         public void popupMenuWillBecomeVisible(PopupMenuEvent e) {dynamic drop-down would go here}
-         public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {}
-         public void popupMenuCanceled(PopupMenuEvent e) {}
-      });*/
-
-      versionsComboBox = new JComboBox();
-      versionsComboBox.setBounds(250, 70, 150, 20);
-      versionsComboBox.addItem(new String("Versions"));
-
-      versionsComboBox.addActionListener(new ActionListener()
-      {
-
-         public void actionPerformed(ActionEvent e)
-         {
-            getDocs();
-         }
-      });
-
-      versionsComboBox.setEnabled(false);
-
-      docsComboBox = new JComboBox();
-      docsComboBox.setBounds(450, 70, 150, 20);
-      docsComboBox.addItem(new String("Documents"));
-
-      docsComboBox.addActionListener(new ActionListener()
-      {
-
-         public void actionPerformed(ActionEvent e)
-         {
-            /**/}
-      });
-
-      docsComboBox.setEnabled(false);
-   }
-
-   /**
-    * set up labels
-    */
-   private void setUpLabels()
-   {
-      ProjectsLabel = new JLabel("Project");
-      VersionsLabel = new JLabel("Version");
-      DocsLabel = new JLabel("Document");
-
-      int labelsY = 50, projectsLabelX = 85, versionsLabelX = 285, docsLabelX = 480, labelsSizeX =
-            80, labelsSizeY = 20;
-
-      ProjectsLabel.setBounds(projectsLabelX, labelsY, labelsSizeX, labelsSizeY);
-      VersionsLabel.setBounds(versionsLabelX, labelsY, labelsSizeX, labelsSizeY);
-      DocsLabel.setBounds(docsLabelX, labelsY, labelsSizeX, labelsSizeY);
+      }
    }
 
    /**
@@ -242,98 +225,7 @@ public class ZayfView extends JFrame
    {
       serverProxy = new DummyServerProxy();
       //TODO: update status bar: connecting...
-      //ServerProxy sp = new ServerProxy(new URL("http://localhost:8080/zanata/").toURI(), "admin", "REDACTED");
+      //ServerProxy sp = new ServerProxy(new URL(url).toURI(), userName, apiKey);
    }
 
-   /**
-    * set text in URL field
-    * 
-    * @param url
-    *           new server URL
-    */
-   public void setUrl(String url)
-   {
-      this.urlTextField.setText(url);
-   }
-
-   /**
-    * get projects from server
-    */
-   public void refreshProjects()
-   {
-      /*projectsListModel.clear();
-      versionsListModel.clear();
-      docsListModel.clear();*/
-
-      projects = serverProxy.getProjectList();
-
-      /*for (Project project : projects)
-         projectsListModel.addElement(project.getName());*/
-
-      /*
-      projectsList.setEnabled(true);
-      versionsList.setEnabled(false);
-      docsList.setEnabled(false);
-      */
-
-      /* this code not functionally compatible with selection events - cascades
-      projectsList.requestFocusInWindow();
-      if (projectsListModel.getSize() > 0)
-         projectsList.setSelectedIndex(0);
-      */
-   }
-
-   /**
-    * get versions for project
-    */
-   public void refreshVersions()
-   {
-      /*versionsListModel.clear();
-      docsListModel.clear();
-      
-      if (projectsList.getSelectedIndex() == -1) return; //TODO: error dialog - must select a project
-      versions = serverProxy.getVersionList(projects.get(projectsList.getSelectedIndex()).getId());
-
-      for (ProjectIteration version : versions)
-         versionsListModel.addElement(version.getId());
-      */
-      /*
-      projectsList.setEnabled(false);
-      versionsList.setEnabled(true);
-      docsList.setEnabled(false);
-      */
-
-      /* this code not functionally compatible with selection events - cascades
-      versionsList.requestFocusInWindow();
-      if (versionsListModel.getSize() > 0)
-         versionsList.setSelectedIndex(0);
-      */
-   }
-
-   /**
-    * get documents for version
-    */
-   public void refreshDocs()
-   {
-      /*docsListModel.clear();
-
-      if (versionsList.getSelectedIndex() == -1) return; //TODO: error dialog - must select a version
-      docs = serverProxy.getDocList(   projects.get(projectsList.getSelectedIndex()).getId(),
-                              versions.get(versionsList.getSelectedIndex()).getId());
-      
-      for (ResourceMeta doc : docs)
-         docsListModel.addElement(doc.getName());
-      */
-      /*
-      projectsList.setEnabled(false);
-      versionsList.setEnabled(false);
-      docsList.setEnabled(true);
-      */
-
-      /* this code not functionally compatible with selection events - cascades
-      docsList.requestFocusInWindow();
-      if (docsListModel.getSize() > 0)
-         docsList.setSelectedIndex(0);
-      */
-   }
 }
