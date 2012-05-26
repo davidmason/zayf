@@ -18,6 +18,7 @@
  */
 package org.davidmason.zayf.ui;
 
+import org.zanata.common.LocaleId;
 import org.zanata.rest.dto.*;
 import org.zanata.rest.dto.resource.*;
 import org.davidmason.zayf.rest.*;
@@ -46,16 +47,19 @@ public class ZayfView extends JFrame
 
    private JMenuBar menuBar;
 
-   private JTree displayTree;
+   private ProjectsTree displayTree;
    private DefaultMutableTreeNode root;
    private JScrollPane treeView;
 
+   private JTextArea textFlowPane, textFlowTargetPane;
    private StatusBar statusBar;
+   private Container centrePanel;
 
    private ServerProxy serverProxy;
    private String url = "http://localhost:8080/zanata/";
    private String userName = "admin";
    private String apiKey = "REDACTED";
+   private LocaleId targetLocale = new LocaleId("en-US");
 
    private List<Project> projects;
    private List<ProjectIteration> iterations;
@@ -71,6 +75,7 @@ public class ZayfView extends JFrame
 
       setUpMenus();
       setUpTree();
+      setUpTextPanes();
 
       addComponents();
 
@@ -82,14 +87,49 @@ public class ZayfView extends JFrame
    }
 
    /**
+    * set up Text fields for displaying text flows and text flow targets
+    */
+   private void setUpTextPanes()
+   {
+      centrePanel = new JPanel();
+      centrePanel.setLayout(new BoxLayout(centrePanel, BoxLayout.PAGE_AXIS));
+
+      JPanel upperCentrePanel = new JPanel(new BorderLayout());
+
+      JLabel textFlowLabel = new JLabel("Text Flow:"); //TODO: confirm "Text Flow" is correct user-speak
+      textFlowPane = new JTextArea();
+      textFlowPane.setForeground(Color.gray);
+      textFlowPane.setText("Select a document in tree view");
+      textFlowPane.setEditable(false);
+
+      upperCentrePanel.add(textFlowLabel, BorderLayout.NORTH);
+      upperCentrePanel.add(textFlowPane, BorderLayout.CENTER);
+
+      JPanel lowerCentrePanel = new JPanel(new BorderLayout());
+
+      JLabel textFlowTargetLabel = new JLabel("Text Flow Target:"); //TODO: confirm "Text Flow Target" is correct user-speak
+      textFlowTargetPane = new JTextArea();
+      textFlowTargetPane.setForeground(Color.gray);
+      textFlowTargetPane.setText("Select a document in tree view.\nOnly text flow targets for the \""
+                                 + targetLocale.getId() + "\" locale are displayed");
+      textFlowTargetPane.setEditable(false);
+
+      lowerCentrePanel.add(textFlowTargetLabel, BorderLayout.NORTH);
+      lowerCentrePanel.add(textFlowTargetPane, BorderLayout.CENTER);
+
+      centrePanel.add(upperCentrePanel);
+      centrePanel.add(lowerCentrePanel);
+   }
+
+   /**
     * set up Tree view
     */
    private void setUpTree()
    {
       root = new DefaultMutableTreeNode(url);
 
-      displayTree = new JTree(root);
-      //displayTree.setPreferredSize(new Dimension(200,0));
+      displayTree = new ProjectsTree(root);
+      displayTree.setPreferredSize(new Dimension(200, 200));
       treeView = new JScrollPane(displayTree);
 
       displayTree.addTreeExpansionListener(new TreeExpansionListener()
@@ -120,6 +160,7 @@ public class ZayfView extends JFrame
 
       add(topPanel, BorderLayout.NORTH);
       add(treeView, BorderLayout.WEST);
+      add(centrePanel, BorderLayout.CENTER);
 
       statusBar = new StatusBar();
       add(statusBar, BorderLayout.SOUTH);
@@ -213,18 +254,19 @@ public class ZayfView extends JFrame
    {
       projects = serverProxy.getProjectList();
 
-      displayTree = new JTree(root);
+      displayTree = new ProjectsTree(root);
+      displayTree.setPreferredSize(new Dimension(200, 200));
       treeView = new JScrollPane(displayTree);
 
       for (Project project : projects)
       {
-         DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project.getName());
+         DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project);
          root.add(projectBranch);
 
          //TODO: load child nodes on expansion only.
          for (ProjectIteration iteration : serverProxy.getVersionList(project.getId())) //get iterations from SP
          {
-            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(iteration.getId());
+            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(iteration);
             projectBranch.add(iterationBranch);
 
             for (ResourceMeta doc : serverProxy.getDocList(project.getId(), iteration.getId())) //get docs from SP
@@ -232,16 +274,21 @@ public class ZayfView extends JFrame
                DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(doc.getName());
                iterationBranch.add(docBranch);
 
-               for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(),
-                                                           doc.getName()))
+               /*
+               for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(), doc.getName()))
                {
                   DefaultMutableTreeNode tfNode = new DefaultMutableTreeNode(tf.getId());
                   docBranch.add(tfNode);
                }
-
-               //TODO: find out if must/should specify locale when querying for TFT's
+               
+               for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(), targetLocale, doc.getName()))
+               {
+                  DefaultMutableTreeNode tftNode = new DefaultMutableTreeNode(tft.getContent());
+                  docBranch.add(tftNode);
+               }
                //if should only show one language at a time, will use text panes to show TF & TFT
                //for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(), locale, docId))
+                */
             }
          }
       }

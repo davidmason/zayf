@@ -88,17 +88,17 @@ public class DummyProject
 
       TextFlowTarget tft1 = new TextFlowTarget("id1");
 
-      tft1.setContent("Dummy german translation 1");
+      tft1.setContent("Dummy translation 1");
       tft1.setState(ContentState.Approved);
       translations.add(tft1);
 
       TextFlowTarget tft2 = new TextFlowTarget("id2");
-      tft2.setContent("Dummy german translation 2");
+      tft2.setContent("Dummy translation 2");
       tft2.setState(ContentState.NeedReview);
       translations.add(tft2);
 
       TextFlowTarget tft3 = new TextFlowTarget("id3");
-      tft3.setContent("");
+      tft3.setContent("Dummy translation 3");
       tft3.setState(ContentState.New);
       translations.add(tft3);
 
