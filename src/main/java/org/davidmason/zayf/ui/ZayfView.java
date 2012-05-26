@@ -18,6 +18,7 @@
  */
 package org.davidmason.zayf.ui;
 
+import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.dto.*;
 import org.zanata.rest.dto.resource.*;
@@ -25,7 +26,7 @@ import org.davidmason.zayf.rest.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.*;
 
 //import java.util.*;
 import java.util.List;
@@ -48,7 +49,7 @@ public class ZayfView extends JFrame
    private JMenuBar menuBar;
 
    private ProjectsTree displayTree;
-   private DefaultMutableTreeNode root;
+   private DefaultMutableTreeNode displayRootNode;
    private JScrollPane treeView;
 
    private JTextArea textFlowPane, textFlowTargetPane;
@@ -76,10 +77,10 @@ public class ZayfView extends JFrame
       setUpMenus();
       setUpTree();
       setUpTextPanes();
-
       addComponents();
 
-      connectToServer();
+      setUpServerProxy();
+      getProjects();
 
       setTitle("Zayf v 0.00000001");
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -126,27 +127,52 @@ public class ZayfView extends JFrame
     */
    private void setUpTree()
    {
-      root = new DefaultMutableTreeNode(url);
+      displayRootNode = new DefaultMutableTreeNode(url);
 
-      displayTree = new ProjectsTree(root);
+      displayTree = new ProjectsTree(displayRootNode);
+
       displayTree.setPreferredSize(new Dimension(200, 200));
       treeView = new JScrollPane(displayTree);
 
-      displayTree.addTreeExpansionListener(new TreeExpansionListener()
+      /*displayTree.addTreeExpansionListener(new TreeExpansionListener()
       {
-
          @Override
          public void treeExpanded(TreeExpansionEvent event)
          {
+            //System.exit(0);
             // TODO Auto-generated method stub
          }
-
+         
          @Override
          public void treeCollapsed(TreeExpansionEvent event)
          {
             // TODO Auto-generated method stub
          }
+      });*/
+      displayTree.addTreeSelectionListener(new TreeSelectionListener()
+      {
+
+         @Override
+         public void valueChanged(TreeSelectionEvent e)
+         {
+            DefaultMutableTreeNode node =
+                  (DefaultMutableTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();
+
+            if (node == null)
+               return;
+
+            Object nodeObject = node.getUserObject();
+            if (nodeObject instanceof TextFlow)
+            {
+               textFlowPane.setText(((TextFlow) nodeObject).getContent());
+
+               //get text flow target
+               //TODO: built data model from ground up, refresh tree based on data model.
+               //TO not do: call SP every time looking for TFT
+            }
+         }
       });
+
    }
 
    /**
@@ -240,13 +266,6 @@ public class ZayfView extends JFrame
       System.exit(0);
    }
 
-   private void connectToServer()
-   {
-      setUpServerProxy();
-
-      getProjects();
-   }
-
    /**
     * get projects from server and populate tree
     */
@@ -254,14 +273,15 @@ public class ZayfView extends JFrame
    {
       projects = serverProxy.getProjectList();
 
-      displayTree = new ProjectsTree(root);
+      displayTree = new ProjectsTree(displayRootNode);
+
       displayTree.setPreferredSize(new Dimension(200, 200));
       treeView = new JScrollPane(displayTree);
 
       for (Project project : projects)
       {
          DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project);
-         root.add(projectBranch);
+         displayRootNode.add(projectBranch);
 
          //TODO: load child nodes on expansion only.
          for (ProjectIteration iteration : serverProxy.getVersionList(project.getId())) //get iterations from SP
@@ -271,28 +291,46 @@ public class ZayfView extends JFrame
 
             for (ResourceMeta doc : serverProxy.getDocList(project.getId(), iteration.getId())) //get docs from SP
             {
-               DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(doc.getName());
+               DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(doc);
                iterationBranch.add(docBranch);
 
-               /*
-               for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(), doc.getName()))
+               for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(),
+                                                           doc.getName()))
                {
-                  DefaultMutableTreeNode tfNode = new DefaultMutableTreeNode(tf.getId());
+                  DefaultMutableTreeNode tfNode = new DefaultMutableTreeNode(tf);
+                  //tfNode.se
                   docBranch.add(tfNode);
                }
-               
+
+               /*
                for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(), targetLocale, doc.getName()))
                {
                   DefaultMutableTreeNode tftNode = new DefaultMutableTreeNode(tft.getContent());
                   docBranch.add(tftNode);
-               }
+               }*/
                //if should only show one language at a time, will use text panes to show TF & TFT
                //for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(), locale, docId))
-                */
+
             }
          }
       }
    }
+
+   /*
+   private void trimDataModel(Object node)
+   {
+      int childCount = dataModel.getChildCount(node);
+      
+      for (int i = 0; i < childCount; i++)
+      {
+         Object child = dataModel.getChild(node, i);
+
+         if (((DefaultMutableTreeNode)child).getUserObject() instanceof ResourceMeta)
+            ((DefaultMutableTreeNode)child).removeAllChildren();
+
+         trimDataModel(child);
+      }
+   }*/
 
    /** opens a modal dialog which allows the user to connect to a database */
    private void openNewConnectionFrame()
