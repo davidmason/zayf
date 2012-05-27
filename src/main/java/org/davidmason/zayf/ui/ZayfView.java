@@ -18,7 +18,7 @@
  */
 package org.davidmason.zayf.ui;
 
-import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter;
+//import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter; //TODO: wat?
 import org.zanata.common.LocaleId;
 import org.zanata.rest.dto.*;
 import org.zanata.rest.dto.resource.*;
@@ -28,13 +28,10 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 
-//import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
-//import java.io.File;
-//import java.io.FileWriter;
-//import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -49,8 +46,10 @@ public class ZayfView extends JFrame
    private JMenuBar menuBar;
 
    private ProjectsTree displayTree;
-   private DefaultMutableTreeNode displayRootNode;
+   private InvisibleNode rootNode;
+   private FilteredTreeModel treeModel;
    private JScrollPane treeView;
+   //private DefaultTreeModel dataTree;
 
    private JTextArea textFlowPane, textFlowTargetPane;
    private StatusBar statusBar;
@@ -127,11 +126,11 @@ public class ZayfView extends JFrame
     */
    private void setUpTree()
    {
-      displayRootNode = new DefaultMutableTreeNode(url);
-
-      displayTree = new ProjectsTree(displayRootNode);
-
+      rootNode = new InvisibleNode(url);
+      treeModel = new FilteredTreeModel(rootNode);
+      displayTree = new ProjectsTree(treeModel);
       displayTree.setPreferredSize(new Dimension(200, 200));
+
       treeView = new JScrollPane(displayTree);
 
       /*displayTree.addTreeExpansionListener(new TreeExpansionListener()
@@ -155,20 +154,38 @@ public class ZayfView extends JFrame
          @Override
          public void valueChanged(TreeSelectionEvent e)
          {
-            DefaultMutableTreeNode node =
-                  (DefaultMutableTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();
+            InvisibleNode node = (InvisibleNode) e.getNewLeadSelectionPath().getLastPathComponent();
 
             if (node == null)
                return;
 
             Object nodeObject = node.getUserObject();
+
             if (nodeObject instanceof TextFlow)
             {
-               textFlowPane.setText(((TextFlow) nodeObject).getContent());
+               //show text flow content
+               TextFlow tf = (TextFlow) nodeObject;
+               textFlowPane.setText(tf.getContent());
 
-               //get text flow target
-               //TODO: built data model from ground up, refresh tree based on data model.
-               //TO not do: call SP every time looking for TFT
+               treeModel.setFiltered(false); //switch off filtering so we can get TFT
+
+               outerLoop:
+               for (int i = 0; i < node.getParent().getChildCount(); i++)
+               {
+                  InvisibleNode TFTnode = (InvisibleNode) node.getParent().getChildAt(i);
+                  if (TFTnode.getUserObject() instanceof TextFlowTarget)
+                  {
+                     //show tft content
+                     TextFlowTarget tft = (TextFlowTarget) TFTnode.getUserObject();
+
+                     if (tft.getResId() == tf.getId())
+                        textFlowTargetPane.setText(tft.getContent());
+
+                     break outerLoop;
+                  }
+               }
+
+               treeModel.setFiltered(true);
             }
          }
       });
@@ -271,66 +288,48 @@ public class ZayfView extends JFrame
     */
    private void getProjects()
    {
-      projects = serverProxy.getProjectList();
-
-      displayTree = new ProjectsTree(displayRootNode);
-
+      treeModel = new FilteredTreeModel(rootNode);
+      displayTree = new ProjectsTree(treeModel);
       displayTree.setPreferredSize(new Dimension(200, 200));
+      displayTree.setFiltered(true);
+
       treeView = new JScrollPane(displayTree);
 
-      for (Project project : projects)
+      for (Project project : serverProxy.getProjectList())
       {
-         DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project);
-         displayRootNode.add(projectBranch);
+         InvisibleNode projectBranch = new InvisibleNode(project);
+         rootNode.add(projectBranch);
 
          //TODO: load child nodes on expansion only.
          for (ProjectIteration iteration : serverProxy.getVersionList(project.getId())) //get iterations from SP
          {
-            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(iteration);
+            InvisibleNode iterationBranch = new InvisibleNode(iteration);
             projectBranch.add(iterationBranch);
 
             for (ResourceMeta doc : serverProxy.getDocList(project.getId(), iteration.getId())) //get docs from SP
             {
-               DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(doc);
+               InvisibleNode docBranch = new InvisibleNode(doc);
                iterationBranch.add(docBranch);
 
                for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(),
                                                            doc.getName()))
                {
-                  DefaultMutableTreeNode tfNode = new DefaultMutableTreeNode(tf);
-                  //tfNode.se
+                  InvisibleNode tfNode = new InvisibleNode(tf);
                   docBranch.add(tfNode);
                }
 
-               /*
-               for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(), targetLocale, doc.getName()))
+               for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(),
+                                                                targetLocale, doc.getName()))
                {
-                  DefaultMutableTreeNode tftNode = new DefaultMutableTreeNode(tft.getContent());
+                  InvisibleNode tftNode = new InvisibleNode(tft.getContent());
+                  tftNode.setVisible(false);
                   docBranch.add(tftNode);
-               }*/
-               //if should only show one language at a time, will use text panes to show TF & TFT
-               //for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(), locale, docId))
-
+               }
             }
          }
       }
+      ((FilteredTreeModel) displayTree.getModel()).reload();
    }
-
-   /*
-   private void trimDataModel(Object node)
-   {
-      int childCount = dataModel.getChildCount(node);
-      
-      for (int i = 0; i < childCount; i++)
-      {
-         Object child = dataModel.getChild(node, i);
-
-         if (((DefaultMutableTreeNode)child).getUserObject() instanceof ResourceMeta)
-            ((DefaultMutableTreeNode)child).removeAllChildren();
-
-         trimDataModel(child);
-      }
-   }*/
 
    /** opens a modal dialog which allows the user to connect to a database */
    private void openNewConnectionFrame()
