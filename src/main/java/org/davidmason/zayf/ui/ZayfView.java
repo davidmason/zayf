@@ -23,6 +23,7 @@ import org.zanata.common.ContentState;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.dto.*;
 import org.zanata.rest.dto.resource.*;
+import org.davidmason.zayf.persistence.FileIO;
 import org.davidmason.zayf.rest.*;
 
 import javax.swing.*;
@@ -273,13 +274,14 @@ public class ZayfView extends JFrame
 
       menu.add(menuItem);
 
-      menuItem = new JMenuItem("Save Project...", KeyEvent.VK_S);
+      menuItem = new JMenuItem("Save Project 1", KeyEvent.VK_S);
       menuItem.addActionListener(new ActionListener()
       {
 
          public void actionPerformed(ActionEvent e)
          {
-            //TODO:
+            if (!FileIO.saveProject((DefaultMutableTreeNode) rootNode.getChildAt(0)))
+               System.err.println("Project save failed.");
          }
       });
 

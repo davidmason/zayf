@@ -2,15 +2,11 @@
     <name>Dummy Project 1</name>
     <description>A dummy project created for testing</description>
     <project-iterations>
-        <ns2:project-iteration id="Dummy Project 1-v1">
-            <status>ACTIVE</status>
-        </ns2:project-iteration>
-        <ns2:project-iteration id="Dummy Project 1-v2">
-            <status>ACTIVE</status>
-        </ns2:project-iteration>
-        <ns2:project-iteration id="Dummy Project 1-v3">
+        <ns2:project-iteration id="dummy1-v1">
             <status>READONLY</status>
         </ns2:project-iteration>
+        <ns2:project-iteration id="dummy1-v2"/>
+        <ns2:project-iteration id="dummy1-v3"/>
     </project-iterations>
     <status>ACTIVE</status>
 </ns2:project>
