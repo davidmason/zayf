@@ -19,6 +19,7 @@
 package org.davidmason.zayf.ui;
 
 //import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter; //TODO: wat?
+import org.zanata.common.ContentState;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.dto.*;
 import org.zanata.rest.dto.resource.*;
@@ -46,12 +47,12 @@ public class ZayfView extends JFrame
    private JMenuBar menuBar;
 
    private ProjectsTree displayTree;
-   private InvisibleNode rootNode;
-   private FilteredTreeModel treeModel;
+   private DefaultMutableTreeNode rootNode;
+   private DefaultTreeModel treeModel;
    private JScrollPane treeView;
-   //private DefaultTreeModel dataTree;
 
-   private JTextArea textFlowPane, textFlowTargetPane;
+   private TextFlowPanel textFlowPanel;
+   private TextFlowTargetPanel textFlowTargetPanel;
    private StatusBar statusBar;
    private Container centrePanel;
 
@@ -61,12 +62,13 @@ public class ZayfView extends JFrame
    private String apiKey = "REDACTED";
    private LocaleId targetLocale = new LocaleId("en-US");
 
+   /*
    private List<Project> projects;
    private List<ProjectIteration> iterations;
    private List<ResourceMeta> docs;
    private List<TextFlow> textFlows;
    private List<TextFlowTarget> textFlowTargets;
-
+   */
    public ZayfView() //throws MalformedURLException, URISyntaxException
    {
       setLayout(new BorderLayout()); //use absolute positioning
@@ -75,7 +77,7 @@ public class ZayfView extends JFrame
 
       setUpMenus();
       setUpTree();
-      setUpTextPanes();
+      setUpTextFlowPanels();
       addComponents();
 
       setUpServerProxy();
@@ -89,36 +91,24 @@ public class ZayfView extends JFrame
    /**
     * set up Text fields for displaying text flows and text flow targets
     */
-   private void setUpTextPanes()
+   private void setUpTextFlowPanels()
    {
       centrePanel = new JPanel();
       centrePanel.setLayout(new BoxLayout(centrePanel, BoxLayout.PAGE_AXIS));
 
-      JPanel upperCentrePanel = new JPanel(new BorderLayout());
+      textFlowPanel = new TextFlowPanel();
+      textFlowTargetPanel = new TextFlowTargetPanel(targetLocale);
 
-      JLabel textFlowLabel = new JLabel("Text Flow:"); //TODO: confirm "Text Flow" is correct user-speak
-      textFlowPane = new JTextArea();
-      textFlowPane.setForeground(Color.gray);
-      textFlowPane.setText("Select a document in tree view");
-      textFlowPane.setEditable(false);
+      clearTextPanes();
 
-      upperCentrePanel.add(textFlowLabel, BorderLayout.NORTH);
-      upperCentrePanel.add(textFlowPane, BorderLayout.CENTER);
+      centrePanel.add(textFlowPanel);
+      centrePanel.add(textFlowTargetPanel);
+   }
 
-      JPanel lowerCentrePanel = new JPanel(new BorderLayout());
+   private void clearTextPanes()
+   {
+      textFlowPanel.clear();
 
-      JLabel textFlowTargetLabel = new JLabel("Text Flow Target:"); //TODO: confirm "Text Flow Target" is correct user-speak
-      textFlowTargetPane = new JTextArea();
-      textFlowTargetPane.setForeground(Color.gray);
-      textFlowTargetPane.setText("Select a document in tree view.\nOnly text flow targets for the \""
-                                 + targetLocale.getId() + "\" locale are displayed");
-      textFlowTargetPane.setEditable(false);
-
-      lowerCentrePanel.add(textFlowTargetLabel, BorderLayout.NORTH);
-      lowerCentrePanel.add(textFlowTargetPane, BorderLayout.CENTER);
-
-      centrePanel.add(upperCentrePanel);
-      centrePanel.add(lowerCentrePanel);
    }
 
    /**
@@ -126,8 +116,8 @@ public class ZayfView extends JFrame
     */
    private void setUpTree()
    {
-      rootNode = new InvisibleNode(url);
-      treeModel = new FilteredTreeModel(rootNode);
+      rootNode = new DefaultMutableTreeNode(url);
+      treeModel = new DefaultTreeModel(rootNode);
       displayTree = new ProjectsTree(treeModel);
       displayTree.setPreferredSize(new Dimension(200, 200));
 
@@ -154,7 +144,8 @@ public class ZayfView extends JFrame
          @Override
          public void valueChanged(TreeSelectionEvent e)
          {
-            InvisibleNode node = (InvisibleNode) e.getNewLeadSelectionPath().getLastPathComponent();
+            DefaultMutableTreeNode node =
+                  (DefaultMutableTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();
 
             if (node == null)
                return;
@@ -165,28 +156,61 @@ public class ZayfView extends JFrame
             {
                //show text flow content
                TextFlow tf = (TextFlow) nodeObject;
-               textFlowPane.setText(tf.getContent());
-
-               treeModel.setFiltered(false); //switch off filtering so we can get TFT
+               textFlowPanel.update(tf);
+               int childCount = node.getParent().getChildCount();
 
                outerLoop:
-               for (int i = 0; i < node.getParent().getChildCount(); i++)
+               for (int i = 0; i < childCount; i++)
                {
-                  InvisibleNode TFTnode = (InvisibleNode) node.getParent().getChildAt(i);
+                  DefaultMutableTreeNode TFTnode =
+                        (DefaultMutableTreeNode) node.getParent().getChildAt(i);
                   if (TFTnode.getUserObject() instanceof TextFlowTarget)
                   {
-                     //show tft content
+                     //show text flow target content
                      TextFlowTarget tft = (TextFlowTarget) TFTnode.getUserObject();
 
                      if (tft.getResId() == tf.getId())
-                        textFlowTargetPane.setText(tft.getContent());
+                     {
+                        textFlowTargetPanel.update(tft);
 
-                     break outerLoop;
+                        break outerLoop;
+                     }
+
+                     textFlowTargetPanel.notFoundError();
+                  }
+               }
+            }
+            else if (nodeObject instanceof TextFlowTarget)
+            {
+               //show text flow target content
+               TextFlowTarget tft = (TextFlowTarget) nodeObject;
+               textFlowTargetPanel.update(tft);
+               int childCount = node.getParent().getChildCount();
+
+               outerLoop:
+               for (int i = 0; i < childCount; i++)
+               {
+                  DefaultMutableTreeNode TFnode =
+                        (DefaultMutableTreeNode) node.getParent().getChildAt(i);
+                  if (TFnode.getUserObject() instanceof TextFlow)
+                  {
+                     //show text flow content
+                     TextFlow tf = (TextFlow) TFnode.getUserObject();
+
+                     if (tft.getResId() == tf.getId())
+                     {
+                        textFlowPanel.update(tf);
+
+                        break outerLoop;
+                     }
+
+                     textFlowPanel.notFoundError(); //theoretically impossible
                   }
                }
 
-               treeModel.setFiltered(true);
             }
+            else
+               clearTextPanes();
          }
       });
 
@@ -277,6 +301,7 @@ public class ZayfView extends JFrame
       menuBar.add(menu);
    }
 
+   /** cleanup and exit program */
    private void quit()
    {
       //TODO: cleanup
@@ -288,47 +313,46 @@ public class ZayfView extends JFrame
     */
    private void getProjects()
    {
-      treeModel = new FilteredTreeModel(rootNode);
-      displayTree = new ProjectsTree(treeModel);
-      displayTree.setPreferredSize(new Dimension(200, 200));
-      displayTree.setFiltered(true);
-
-      treeView = new JScrollPane(displayTree);
-
       for (Project project : serverProxy.getProjectList())
       {
-         InvisibleNode projectBranch = new InvisibleNode(project);
+         DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project);
          rootNode.add(projectBranch);
 
          //TODO: load child nodes on expansion only.
+
          for (ProjectIteration iteration : serverProxy.getVersionList(project.getId())) //get iterations from SP
          {
-            InvisibleNode iterationBranch = new InvisibleNode(iteration);
+            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(iteration);
             projectBranch.add(iterationBranch);
 
             for (ResourceMeta doc : serverProxy.getDocList(project.getId(), iteration.getId())) //get docs from SP
             {
-               InvisibleNode docBranch = new InvisibleNode(doc);
+               DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(doc);
                iterationBranch.add(docBranch);
 
                for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(),
                                                            doc.getName()))
                {
-                  InvisibleNode tfNode = new InvisibleNode(tf);
+                  DefaultMutableTreeNode tfNode = new DefaultMutableTreeNode(tf);
                   docBranch.add(tfNode);
                }
 
                for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(),
                                                                 targetLocale, doc.getName()))
                {
-                  InvisibleNode tftNode = new InvisibleNode(tft.getContent());
-                  tftNode.setVisible(false);
+                  DefaultMutableTreeNode tftNode = new DefaultMutableTreeNode(tft);
                   docBranch.add(tftNode);
                }
             }
          }
       }
-      ((FilteredTreeModel) displayTree.getModel()).reload();
+
+      treeModel = new DefaultTreeModel(rootNode);
+      displayTree = new ProjectsTree(treeModel);
+      displayTree.setPreferredSize(new Dimension(200, 200));
+      treeView = new JScrollPane(displayTree);
+
+      ((DefaultTreeModel) displayTree.getModel()).reload();
    }
 
    /** opens a modal dialog which allows the user to connect to a database */
