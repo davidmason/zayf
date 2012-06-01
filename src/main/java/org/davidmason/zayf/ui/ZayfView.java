@@ -287,6 +287,19 @@ public class ZayfView extends JFrame
 
       menu.add(menuItem);
 
+      menuItem = new JMenuItem("Load Dummy Project 1", KeyEvent.VK_S);
+      menuItem.addActionListener(new ActionListener()
+      {
+
+         public void actionPerformed(ActionEvent e)
+         {
+            if (!FileIO.loadProject(new java.io.File("Dummy Project 1/Dummy Project 1.xml")))
+               System.err.println("Project load failed.");
+         }
+      });
+
+      menu.add(menuItem);
+
       menuItem = new JMenuItem("Exit", KeyEvent.VK_X);
       menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, ActionEvent.ALT_MASK));
       menuItem.addActionListener(new ActionListener()

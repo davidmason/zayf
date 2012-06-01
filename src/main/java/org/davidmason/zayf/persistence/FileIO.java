@@ -19,17 +19,15 @@
 package org.davidmason.zayf.persistence;
 
 import java.io.*;
-//import java.util.ArrayList;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
 
-//import org.zanata.common.EntityStatus;
 import org.zanata.common.ContentState;
 import org.zanata.rest.dto.*;
-//import org.zanata.rest.dto.resource.ResourceMeta;
-//import org.davidmason.zayf.rest.*;
 import org.zanata.rest.dto.resource.ResourceMeta;
 import org.zanata.rest.dto.resource.TextFlow;
 import org.zanata.rest.dto.resource.TextFlowTarget;
@@ -37,10 +35,78 @@ import org.zanata.rest.dto.resource.TextFlowTarget;
 public class FileIO
 {
 
-   //TODO: save in proper format/s
+   private static List<File> getIterationFiles(File iterationDirectory)
+   {
+      List<File> resultList = new ArrayList<File>();
+
+      FileFilter poFilter = new FileFilter()
+      {
+
+         @Override
+         public boolean accept(File pathname)
+         {
+            if (pathname.isDirectory())
+               return true;
+            if (pathname.getName().endsWith(".po"))
+               return true;
+
+            return false;
+         }
+      };
+
+      File[] list = iterationDirectory.listFiles(poFilter);
+
+      for (int i = 0; i < list.length; i++)
+      {
+         if (list[i].isFile())
+            resultList.add(list[i]);
+         else
+            resultList.addAll(getIterationFiles(list[i]));
+      }
+
+      return resultList;
+   }
+
    /**
-    * Save project as xml files. Placeholder. get save from project tree node working, then save in
-    * correct format/s
+    * load project from hard disk
+    * 
+    * @param projectFile
+    * @return true if successful
+    */
+   public static boolean loadProject(File projectFile)
+   {
+      try
+      {
+         JAXBContext context = JAXBContext.newInstance(Project.class);
+         Unmarshaller unmarshaller = context.createUnmarshaller();
+
+         Project project = (Project) unmarshaller.unmarshal(projectFile);
+
+         //System.out.println(project.toString());
+         for (ProjectIteration iteration : project.getIterations())
+         {
+            //System.out.println(iteration.toString());
+            File iterationDirectory = new File(project.getName() + "/" + iteration.getId());
+            List<File> iterationFiles = getIterationFiles(iterationDirectory);
+
+            for (File file : iterationFiles)
+            {
+               //TODO: convert files to resourceMetas containing textFlows and textFlowTargets
+
+            }
+         }
+      }
+      catch (Exception e)
+      {
+         System.err.println("Project load failed: " + e.getMessage());
+         return false;
+      }
+
+      return true;
+   }
+
+   /**
+    * Saves project as xml meta files and po text flows
     * 
     * @param projectBranch
     *           node containing project
