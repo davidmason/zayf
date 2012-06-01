@@ -26,6 +26,7 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 //import org.zanata.common.EntityStatus;
+import org.zanata.common.ContentState;
 import org.zanata.rest.dto.*;
 //import org.zanata.rest.dto.resource.ResourceMeta;
 //import org.davidmason.zayf.rest.*;
@@ -35,23 +36,6 @@ import org.zanata.rest.dto.resource.TextFlowTarget;
 
 public class FileIO
 {
-
-   //public static void main(String[] args) throws IOException
-   //{
-   //FileWriter fileWriter = new FileWriter(file);
-   //DummyServerProxy sp = new DummyServerProxy();
-
-   //List<Project> projectList = sp.getProjectList();
-   //Project project = DummyProject.getProject();
-
-   //for (Project project : projectList)
-   //{
-   //File file = new File(project.getName() + ".txt");
-
-   //   if (!saveProject(project))
-   //      System.err.println("Project save failed.");
-   //}
-   //}
 
    //TODO: save in proper format/s
    /**
@@ -109,71 +93,68 @@ public class FileIO
             ResourceMeta doc = (ResourceMeta) docBranch.getUserObject();
 
             File docFile = new File(project.getName() + "/" + iteration.getId() + "/"
-                                    + doc.getName() + ".xml");
-            docFile.getParentFile().mkdirs(); //make Project/ProjectIteration/docpath/doc.xml directory
+                                    + doc.getName() + ".po");
+            docFile.getParentFile().mkdirs(); //make Project/ProjectIteration/docpath/doc.po directory
 
             try
             {
                FileWriter fw = new FileWriter(docFile);
-               fw.write(DTOUtil.toXML(doc)); //save Project/ProjectIteration/docpath/doc.xml
+               //TODO: fw.write(po file header)
+
+               //get text flows and/or text flow targets
+               for (int k = 0, textFlowCount = docBranch.getChildCount(); k < textFlowCount; k++)
+               {
+                  DefaultMutableTreeNode textFlowLeaf =
+                        (DefaultMutableTreeNode) docBranch.getChildAt(k);
+
+                  if (textFlowLeaf.getUserObject() instanceof TextFlow)
+                  {
+                     TextFlow textFlow = (TextFlow) textFlowLeaf.getUserObject();
+                     TextFlowTarget textFlowTarget = null;
+                     //TODO: write #: line if zanata stores this info
+                     //TODO: write #, to indicate fuzzy?
+
+                     //get textFlowTarget belonging to textFlow
+                     outerloop:
+                     for (int l = 0, textFlowTargetCount = docBranch.getChildCount(); l < textFlowTargetCount; l++)
+                     {
+                        DefaultMutableTreeNode textFlowTargetLeaf =
+                              (DefaultMutableTreeNode) docBranch.getChildAt(l);
+
+                        if (textFlowTargetLeaf.getUserObject() instanceof TextFlowTarget)
+                        {
+                           textFlowTarget = (TextFlowTarget) textFlowTargetLeaf.getUserObject();
+
+                           if (textFlowTarget.getResId() == textFlow.getId()) //found corresponding TFT
+                              break outerloop;
+                        }
+                     }
+
+                     if (textFlowTarget == null)
+                     {
+                        fw.write("msgid \"" + textFlow.getContent() + "\"\n");
+                        fw.write("msgstr \"\"\n\n");
+                     }
+                     else
+                     {
+                        if (textFlowTarget.getState() == ContentState.NeedReview)
+                           fw.write("#, fuzzy\n");
+                        fw.write("msgid \"" + textFlow.getContent() + "\"\n");
+                        fw.write("msgstr \"" + textFlowTarget.getContent() + "\"\n\n");
+                     }
+                  }
+                  else if (!(textFlowLeaf.getUserObject() instanceof TextFlowTarget))
+                  {
+                     System.err.println("Assert failed: Branch contains object that is neither a TextFlow nor a TextFlowTarget");
+                     return false;
+                  }
+               }
                fw.close();
             }
-            catch (Exception e)
+            catch (IOException e)
             {
                System.err.println("ResourceMeta save failed: " + e.getMessage());
                return false;
-            }
-
-            //get text flows and/or text flow targets
-            for (int k = 0, textFlowCount = docBranch.getChildCount(); k < textFlowCount; k++)
-            {
-               DefaultMutableTreeNode textFlowLeaf =
-                     (DefaultMutableTreeNode) docBranch.getChildAt(k);
-
-               if (textFlowLeaf.getUserObject() instanceof TextFlow)
-               {
-                  TextFlow textFlow = (TextFlow) textFlowLeaf.getUserObject();
-
-                  File tfFile =
-                        new File(docFile.getParentFile() + "/" + "TF_" + textFlow.getId() + ".xml");
-
-                  try
-                  {
-                     FileWriter fw = new FileWriter(tfFile);
-                     fw.write(DTOUtil.toXML(textFlow)); //save Project/ProjectIteration/docpath/tf.xml
-                     fw.close();
-                  }
-                  catch (Exception e)
-                  {
-                     System.err.println("TextFlow save failed: " + e.getMessage());
-                     return false;
-                  }
-               }
-               else if (textFlowLeaf.getUserObject() instanceof TextFlowTarget)
-               {
-                  TextFlowTarget textFlowTarget = (TextFlowTarget) textFlowLeaf.getUserObject();
-
-                  File tftFile =
-                        new File(docFile.getParentFile() + "/" + "TFT_" + textFlowTarget.getResId()
-                                 + ".xml");
-
-                  try
-                  {
-                     FileWriter fw = new FileWriter(tftFile);
-                     fw.write(DTOUtil.toXML(textFlowTarget)); //save Project/ProjectIteration/docpath/tft.xml
-                     fw.close();
-                  }
-                  catch (Exception e)
-                  {
-                     System.err.println("TextFlowTarget save failed: " + e.getMessage());
-                     return false;
-                  }
-               }
-               else
-               {
-                  System.err.println("Assert failed: Branch contains neither a TextFlow nor a TextFlowTarget");
-                  return false;
-               }
             }
 
          }
@@ -196,80 +177,4 @@ public class FileIO
 
       return true;
    }
-
-   ///**
-   // * Save project to disk within default directory structure
-   // * @return true if successful
-   // */
-   /*
-   public static boolean saveProject(Project project)
-   {
-      File file = new File(project.getName());
-      file.mkdir(); //make project directory
-      file = new File(project.getName() + "/" + project.getName() + ".xml");
-      
-      try
-      {
-         FileWriter fw = new FileWriter(file);
-         fw.write(DTOUtil.toXML(project)); //save Project/Project.xml
-         fw.close();
-      }
-      catch (IOException e)
-      {
-         System.err.println("Project save failed: " + e.getMessage());
-         return false;
-      }
-      
-         
-      List<ProjectIteration> iterations = project.getIterations(true);
-      for (ProjectIteration iteration : iterations)
-      {
-         file = new File(project.getName() + "/" + iteration.getId());
-         file.mkdir(); //make Project/ProjectIteration directory
-         
-         List<ResourceMeta> docList = DummyProject.getDocList(project.getId(), iteration.getId());
-         for (ResourceMeta doc : docList)
-         {
-            file = new File(project.getName() + "/" + iteration.getId() + "/"
-                    + doc.getName() + ".xml"); 
-            file.getParentFile().mkdirs(); //make Project/ProjectIteration/docpath/doc.xml directory
-            
-            try
-            {
-               FileWriter fw = new FileWriter(file);
-               fw.write(DTOUtil.toXML(doc)); //save Project/ProjectIteration/docpath/doc.xml
-               fw.close();
-            }
-            catch (Exception e)
-            {
-               System.err.println("ResourceMeta save failed: " + e.getMessage());
-               return false;
-            }
-
-            List<TextFlow> flows = DummyProject.getTextFlows(project.getId(), iteration.getId(), doc.getName());
-            for (TextFlow tf : flows)
-            {
-               File docFile = new File(file.getParentFile() + "/" + tf.getId() + ".xml");
-               
-               try
-               {
-                  FileWriter fw = new FileWriter(docFile);
-                  //TODO: save as .po file instead of xml placeholder
-                  fw.write(DTOUtil.toXML(tf)); //save Project/ProjectIteration/docpath/tf.xml
-                  fw.close();
-               }
-               catch (Exception e)
-               {
-                  System.err.println("TextFlow save failed: " + e.getMessage());
-                  return false;
-               }
-            }
-
-         }
-         
-         
-      }
-
-      return true;
-   }*/
 }
