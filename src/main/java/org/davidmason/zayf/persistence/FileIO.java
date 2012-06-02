@@ -82,16 +82,66 @@ public class FileIO
 
          Project project = (Project) unmarshaller.unmarshal(projectFile);
 
+         DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project);
+
          //System.out.println(project.toString());
          for (ProjectIteration iteration : project.getIterations())
          {
+            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(iteration);
+            projectBranch.add(iterationBranch);
+
             //System.out.println(iteration.toString());
             File iterationDirectory = new File(project.getName() + "/" + iteration.getId());
             List<File> iterationFiles = getIterationFiles(iterationDirectory);
 
             for (File file : iterationFiles)
             {
+               ResourceMeta resourceMeta = new ResourceMeta(file.getName()); //TODO:
+               DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(resourceMeta);
+               iterationBranch.add(docBranch);
+
+               //resourceMeta.set
+               //TODO: get header info
+
                //TODO: convert files to resourceMetas containing textFlows and textFlowTargets
+
+               //System.out.println("File: " + file.getName());
+
+               FileReader fr = new FileReader(file);
+               BufferedReader reader = new BufferedReader(fr);
+
+               String line, msgid = null, msgstr = null;
+
+               while (true)
+               {
+                  line = reader.readLine();
+
+                  if (line == null)
+                     break;
+
+                  line = line.trim();
+
+                  if (line.startsWith("msgid"))
+                     msgid = line.substring(line.indexOf('"') + 1, line.length() - 1);
+
+                  if (line.startsWith("msgstr"))
+                     msgstr = line.substring(line.indexOf('"') + 1, line.length() - 1);
+
+                  if ((msgid != null) && (msgstr != null))
+                  {
+                     //TextFlow textFlow = new TextFlow(id, lang, content) //TODO: populate tf/tft and add
+                     //TextFlowTarget textFlowTarget = new TextFlowTarget(resId)
+
+                     //System.out.println(" msgid: '" + msgid + "'");
+                     //System.out.println(" msgstr: '" + msgstr + "'");
+
+                     msgid = null;
+                     msgstr = null;
+                  }
+               }
+
+               reader.close();
+               fr.close();
 
             }
          }
