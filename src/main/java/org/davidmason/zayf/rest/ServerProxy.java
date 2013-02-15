@@ -18,13 +18,21 @@
  */
 package org.davidmason.zayf.rest;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.DataConfiguration;
+import org.apache.commons.configuration.HierarchicalINIConfiguration;
+import org.apache.commons.configuration.SubnodeConfiguration;
 import org.jboss.resteasy.client.ClientResponse;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.client.IProjectResource;
@@ -49,18 +57,110 @@ import org.zanata.rest.dto.resource.TranslationsResource;
 public class ServerProxy
 {
 
-   private static final String SERVER_VERSION = "1.5.0";
+   // TODO figure out if these things can come from zanata libraries instead of
+   // generating them manually.
+   private static final String SERVER_VERSION = "2.0.1-SNAPSHOT";
    private static final String SERVER_BUILD_TIMESTAMP = "unknown";
 
-   private URI serverURI;
+   private static final String DEFAULT_CONFIG_LOCATION = ".config/zanata.ini";
 
+   private static final String urlKeySuffix = ".url";
+   private static final String userNameSuffix = ".username";
+   private static final String apiKeyKeySuffix = ".key";
+
+   private static final String RESOURCE_PREFIX = "rest";
+
+   private List<ServerInfo> servers;
+
+   // FIXME replace with ServerInfo for selected server, or just take a
+   // ServerInfo in the methods
+   private URI serverURI;
    private ZanataProxyFactory requestFactory;
 
    /**
     * Included to allow dummy proxy instantiation without server request
+    * 
+    * @throws URISyntaxException
     */
-   ServerProxy()
-   {}
+   public ServerProxy() throws URISyntaxException
+   {
+      servers = Collections.<ServerInfo>emptyList();
+
+      loadZanataUserConfig();
+      // TODO log.debug
+      System.out.println("Got list of servers from user config:");
+      for (ServerInfo server : servers)
+      {
+         System.out.println(server);
+      }
+
+      // FIXME move this to user dropdown selection (and remove associated exception from this class)
+      ServerInfo chosenServer = servers.get(0);
+      System.out.println("Connecting to server: " + chosenServer.getServerName());
+      serverURI = chosenServer.getServerUrl().toURI();
+
+      setupRequestFactory(serverURI, chosenServer.getUserName(), chosenServer.getApiKey(), false);
+   }
+
+   private void loadZanataUserConfig()
+   {
+      File userConfig = new File(System.getProperty("user.home"), DEFAULT_CONFIG_LOCATION);
+      try
+      {
+         HierarchicalINIConfiguration config = new HierarchicalINIConfiguration(userConfig);
+         SubnodeConfiguration serverConfig = config.getSection("servers");
+         DataConfiguration dataConfig = new DataConfiguration(serverConfig);
+         servers = getServerList(dataConfig);
+      }
+      catch (ConfigurationException e)
+      {
+         System.out.println("Failed to load configuration from " + userConfig.getAbsolutePath());
+         e.printStackTrace();
+      }
+
+   }
+
+   private List<ServerInfo> getServerList(DataConfiguration serverConfig)
+   {
+      List<String> prefixes = new ArrayList<String>();
+      Iterator<String> iter = serverConfig.getKeys();
+      // TODO log.debug
+      System.out.print("Keys: ");
+      while (iter.hasNext())
+      {
+         String key = iter.next();
+         // TODO log.debug
+         System.out.print(key + " ");
+         if (key.endsWith(urlKeySuffix))
+         {
+            String prefix = key.substring(0, key.length() - urlKeySuffix.length());
+            if (!prefix.isEmpty())
+            {
+               prefixes.add(prefix);
+            }
+         }
+      }
+      // TODO log.debug
+      System.out.println();
+
+      List<ServerInfo> servers = new ArrayList<ServerInfo>();
+      for (String prefix : prefixes)
+      {
+         String urlKey = prefix + urlKeySuffix;
+         String userNameKey = prefix + userNameSuffix;
+         String apiKeyKey = prefix + apiKeyKeySuffix;
+         // TODO log.debug
+         System.out.println("urlKey: " + urlKey + " userNameKey: " + userNameKey + " apiKeyKey: "
+                            + apiKeyKey);
+         ServerInfo server =
+               new ServerInfo(prefix, serverConfig.getURL(urlKey, null),
+                              serverConfig.getString(userNameKey, null),
+                              serverConfig.getString(apiKeyKey, null));
+         servers.add(server);
+      }
+
+      return servers;
+   }
 
    /**
     * Create a new server proxy for a given server
@@ -81,6 +181,18 @@ public class ServerProxy
    {
       this.serverURI = serverURI;
 
+      setupRequestFactory(serverURI, userName, apiKey, debugLogging);
+   }
+
+   /**
+    * @param serverURI
+    * @param userName
+    * @param apiKey
+    * @param debugLogging
+    */
+   private void setupRequestFactory(URI serverURI, String userName, String apiKey,
+                                    boolean debugLogging)
+   {
       requestFactory =
             new ZanataProxyFactory(serverURI, userName, apiKey,
                                    new VersionInfo(SERVER_VERSION, SERVER_BUILD_TIMESTAMP),
@@ -99,7 +211,7 @@ public class ServerProxy
       ClientResponse<Project[]> projectListResponse = projectListResource.get();
       if (projectListResponse.getStatus() >= 399)
       {
-         //FIXME throw specific useful exception
+         // FIXME throw specific useful exception
          System.out.println("Got error response code: " + projectListResponse.getStatus());
          throw new RuntimeException("Got error response code retrieving project list: "
                                     + projectListResponse.getStatus());
@@ -124,7 +236,7 @@ public class ServerProxy
       ClientResponse<Project> response = projectResource.get();
       if (response.getStatus() >= 399)
       {
-         //FIXME throw specific useful exception
+         // FIXME throw specific useful exception
          System.out.println("Got error response code: " + response.getStatus());
          throw new RuntimeException("Got error response code retrieving projec: "
                                     + response.getStatus());
@@ -151,7 +263,7 @@ public class ServerProxy
       ClientResponse<List<ResourceMeta>> getResponse = resource.get(null);
       if (getResponse.getStatus() >= 399)
       {
-         //FIXME use more specific exception class
+         // FIXME use more specific exception class
          throw new RuntimeException("Error response code for document list request: "
                                     + getResponse.getStatus());
       }
@@ -171,17 +283,34 @@ public class ServerProxy
    {
       ITranslatedDocResource resource =
             requestFactory.getTranslatedDocResource(projectSlug, versionSlug);
-      ClientResponse<TranslationsResource> response =
-            resource.getTranslations(prepareDocId(docId), locale, null);
-      TranslationsResource res = response.getEntity();
-      return res.getTextFlowTargets();
+      System.out.println("resource: " + resource);
+
+      // This is where it is failing, not all the time but sometimes,
+      // complaining of no MessageBodyReader for
+      // content-type text/html;charset="ISO-8859-1" and type
+      // TranslationsResource
+      // may be getting some kind of error state here...
+
+      // My server is returning 404 for that document, looks like in all
+      // locales...
+      // FIXME temporary hack to get around temperamental server
+      try
+      {
+         ClientResponse<TranslationsResource> response =
+               resource.getTranslations(prepareDocId(docId), locale, null);
+         System.out.println(response.getEntity().toString());
+         TranslationsResource res = response.getEntity();
+         return res.getTextFlowTargets();
+      }
+      catch (Exception e)
+      {
+         return new ArrayList<TextFlowTarget>();
+      }
    }
 
-   //TODO get list of supported locales for server, project, version
+   // TODO get list of supported locales for server, project, version
 
-   private static String RESOURCE_PREFIX = "rest";
-
-   //TODO move this method into ZanataProxyFactory
+   // TODO move this method into ZanataProxyFactory
    public static URI getRestURI(URI baseURI)
    {
       try

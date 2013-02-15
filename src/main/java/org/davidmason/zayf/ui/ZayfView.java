@@ -34,6 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -44,6 +47,8 @@ import java.net.URL;
 @SuppressWarnings({"serial", "unused"})
 public class ZayfView extends JFrame
 {
+
+   private static boolean USE_DUMMY_SERVER = false;
 
    private JMenuBar menuBar;
 
@@ -59,9 +64,10 @@ public class ZayfView extends JFrame
 
    private ServerProxy serverProxy;
    private String url = "http://localhost:8080/zanata/";
-   private String userName = "admin";
-   private String apiKey = "REDACTED";
-   private LocaleId targetLocale = new LocaleId("en-US");
+   private String userName = "damason"; //"admin";
+   private String apiKey =
+         /* "REDACTED"; */"REDACTED";
+   private LocaleId targetLocale = new LocaleId("de");
 
    /*
    private List<Project> projects;
@@ -328,32 +334,43 @@ public class ZayfView extends JFrame
     */
    private void getProjects()
    {
-      for (Project project : serverProxy.getProjectList())
+      List<Project> projectList = serverProxy.getProjectList();
+      System.out.println("Got server list");
+      for (Project project : projectList)
       {
          DefaultMutableTreeNode projectBranch = new DefaultMutableTreeNode(project);
          rootNode.add(projectBranch);
 
          //TODO: load child nodes on expansion only.
 
-         for (ProjectIteration iteration : serverProxy.getVersionList(project.getId())) //get iterations from SP
+         List<ProjectIteration> versionList = serverProxy.getVersionList(project.getId());
+         System.out.println("Got version list for project " + project.getId());
+         for (ProjectIteration version : versionList)
          {
-            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(iteration);
+            DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(version);
             projectBranch.add(iterationBranch);
 
-            for (ResourceMeta doc : serverProxy.getDocList(project.getId(), iteration.getId())) //get docs from SP
+            List<ResourceMeta> docList = serverProxy.getDocList(project.getId(), version.getId());
+            System.out.println("Got document list for version " + version.getId());
+            for (ResourceMeta doc : docList) //get docs from SP
             {
                DefaultMutableTreeNode docBranch = new DefaultMutableTreeNode(doc);
                iterationBranch.add(docBranch);
 
-               for (TextFlow tf : serverProxy.getTextFlows(project.getId(), iteration.getId(),
-                                                           doc.getName()))
+               List<TextFlow> textFlows =
+                     serverProxy.getTextFlows(project.getId(), version.getId(), doc.getName());
+               System.out.println("Got text flows for document " + doc.getName());
+               for (TextFlow tf : textFlows)
                {
                   DefaultMutableTreeNode tfNode = new DefaultMutableTreeNode(tf);
                   docBranch.add(tfNode);
                }
 
-               for (TextFlowTarget tft : serverProxy.getTargets(project.getId(), iteration.getId(),
-                                                                targetLocale, doc.getName()))
+               List<TextFlowTarget> targets =
+                     serverProxy.getTargets(project.getId(), version.getId(), targetLocale,
+                                            doc.getName());
+               System.out.println("Got targets for document " + doc.getName());
+               for (TextFlowTarget tft : targets)
                {
                   DefaultMutableTreeNode tftNode = new DefaultMutableTreeNode(tft);
                   docBranch.add(tftNode);
@@ -380,9 +397,12 @@ public class ZayfView extends JFrame
          try
          {
             //TODO: if connected, disconnect (if SP can force disconnect)
+            if (USE_DUMMY_SERVER)
+               serverProxy = new ServerProxy();
+            //               serverProxy = new ServerProxy(new URL(ncf.getUrl()).toURI(), ncf.getUserName(), ncf.getApiKey());
+            else
+               serverProxy = new DummyServerProxy();
 
-            //serverProxy = new ServerProxy(new URL(ncf.getUrl()).toURI(), ncf.getUserName(), ncf.getApiKey());
-            serverProxy = new DummyServerProxy();
             statusBar.setConnection("Connected", new Color(0, 120, 0));
          }
          catch (Exception e)
@@ -398,9 +418,50 @@ public class ZayfView extends JFrame
     */
    private void setUpServerProxy()
    {
-      serverProxy = new DummyServerProxy();
+      if (USE_DUMMY_SERVER)
+      {
+         try
+         {
+            serverProxy = new DummyServerProxy();
+         }
+         catch (URISyntaxException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+      }
+      else
+      {
+         //         URI uri;
+         //         try
+         //         {
+         //            uri = new URL(url).toURI();
+         //         }
+         //         catch (MalformedURLException e)
+         //         {
+         //            // FIXME show user message about invalid URL
+         //            e.printStackTrace();
+         //            return;
+         //         }
+         //         catch (URISyntaxException e)
+         //         {
+         //            // FIXME show user message about invalid URL
+         //            e.printStackTrace();
+         //            return;
+         //         }
+         //         serverProxy = new ServerProxy(uri, userName, apiKey);
+         try
+         {
+            serverProxy = new ServerProxy();
+         }
+         catch (URISyntaxException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+         System.out.println("Connected to real server");
+      }
       statusBar.setConnection("Connected", new Color(0, 120, 0));
-      //ServerProxy sp = new ServerProxy(new URL(url).toURI(), userName, apiKey);
    }
 
 }

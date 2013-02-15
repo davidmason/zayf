@@ -18,6 +18,7 @@
  */
 package org.davidmason.zayf.rest;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,12 @@ import org.zanata.rest.dto.resource.TextFlowTarget;
 
 public class DummyServerProxy extends ServerProxy
 {
+
+   public DummyServerProxy() throws URISyntaxException
+   {
+      super();
+      // TODO Auto-generated constructor stub
+   }
 
    @Override
    public List<Project> getProjectList()
