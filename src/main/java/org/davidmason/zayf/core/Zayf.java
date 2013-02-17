@@ -18,10 +18,12 @@
  */
 package org.davidmason.zayf.core;
 
+import org.davidmason.zayf.controller.ProjectDetailsController;
 import org.davidmason.zayf.controller.ProjectTreeController;
 import org.davidmason.zayf.controller.ServerSelectController;
 import org.davidmason.zayf.view.DocumentsView;
 import org.davidmason.zayf.view.MainWindow;
+import org.davidmason.zayf.view.ProjectDetailsView;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.davidmason.zayf.view.ServerSelectView;
 
@@ -43,17 +45,20 @@ public class Zayf
          {
             System.out.println("Loading application.");
 
-            ProjectTreeView projectTreeView = new ProjectTreeView();
-            ProjectTreeController projectTreeController =
-                  new ProjectTreeController(projectTreeView);
+            ProjectDetailsView projDetailsView = new ProjectDetailsView();
+            ProjectDetailsController projDetailsControl =
+                  new ProjectDetailsController(projDetailsView);
 
-            ServerSelectController serverController =
-                  new ServerSelectController(projectTreeController);
-            ServerSelectView serverSelectView = new ServerSelectView(serverController);
+            ProjectTreeView projTreeView = new ProjectTreeView();
+            ProjectTreeController projTreeControl =
+                  new ProjectTreeController(projTreeView, projDetailsControl);
+
+            ServerSelectController serverControl = new ServerSelectController(projTreeControl);
+            ServerSelectView serverSelectView = new ServerSelectView(serverControl);
 
             DocumentsView documentsView = new DocumentsView();
 
-            new MainWindow(serverSelectView, projectTreeView, documentsView);
+            new MainWindow(serverSelectView, projTreeView, projDetailsView, documentsView);
          }
       });
    }

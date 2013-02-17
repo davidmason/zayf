@@ -21,6 +21,8 @@ package org.davidmason.zayf.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -37,9 +39,41 @@ public class ProjectTreeController
    // private ServerInfo currentServer;
    private ServerProxy server;
 
-   public ProjectTreeController(ProjectTreeView view)
+   // TODO use interface for this, and change to action listener pattern
+   private ProjectDetailsController projectDetailsDisplayer;
+
+   public ProjectTreeController(ProjectTreeView view,
+                                ProjectDetailsController projectDetailsController)
    {
       this.view = view;
+      this.projectDetailsDisplayer = projectDetailsController;
+
+      view.addSelectionListener(buildProjectSelectionListener());
+
+   }
+
+   private TreeSelectionListener buildProjectSelectionListener()
+   {
+      TreeSelectionListener listener = new TreeSelectionListener()
+      {
+
+         @Override
+         public void valueChanged(TreeSelectionEvent e)
+         {
+            DefaultMutableTreeNode node =
+                  (DefaultMutableTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();
+            if (node == null)
+            {
+               projectDetailsDisplayer.loadProject(null);
+               return;
+            }
+
+            // only showing projects in tree
+            Project project = (Project) node.getUserObject();
+            projectDetailsDisplayer.loadProject(project);
+         }
+      };
+      return listener;
    }
 
    // public String getServerUrl() {
@@ -89,10 +123,9 @@ public class ProjectTreeController
 
       TreeModel model = new DefaultTreeModel(rootNode);
       view.showProjectTree(model);
-
-      //      populateProjectNodes(projectNodes);
    }
 
+   // Probably won't use this, but keeping the code here for reference on fetching iterations
    private void populateProjectNodes(List<DefaultMutableTreeNode> projectNodes)
    {
       for (DefaultMutableTreeNode node : projectNodes)

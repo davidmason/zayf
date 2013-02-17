@@ -21,6 +21,7 @@ package org.davidmason.zayf.view;
 import java.awt.BorderLayout;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 /**
@@ -42,14 +43,25 @@ public class MainWindow extends JFrame
 
    private ServerSelectView serverSelect;
    private ProjectTreeView projectTree;
-   private DocumentsView docsView;
+   private ProjectDetailsView projectDetailsView;
+
+   // FIXME use real view
+   private JPanel versionDetailsView;
+
+   //   private DocumentsView docsView;
 
    public MainWindow(ServerSelectView serverSelect,
-                     ProjectTreeView projectTreeView, DocumentsView documentsView)
+                     ProjectTreeView projectTreeView, ProjectDetailsView projectDetailsView,
+                     DocumentsView documentsView)
    {
       this.serverSelect = serverSelect;
       this.projectTree = projectTreeView;
-      this.docsView = documentsView;
+      this.projectDetailsView = projectDetailsView;
+
+      // FIXME use real view
+      this.versionDetailsView = new JPanel();
+
+      //      this.docsView = documentsView;
 
       buildGui();
    }
@@ -63,13 +75,19 @@ public class MainWindow extends JFrame
       setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
       setLocationRelativeTo(null); // centre screen
 
+      JSplitPane projectDetailsPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false,
+                                                     projectDetailsView, versionDetailsView);
+      projectDetailsPane.setDividerLocation(200);
+      projectDetailsPane.setDividerSize(3);
+      projectDetailsPane.setEnabled(true);
+
       JSplitPane projectPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                                              false, projectTree, docsView);
+                                              false, projectTree, projectDetailsPane);
       projectPane.setDividerLocation(300);
-      projectPane.setDividerSize(5);
+      projectPane.setDividerSize(3);
       projectPane.setEnabled(true);
 
-      add(serverSelect, BorderLayout.NORTH);
+      add(serverSelect, BorderLayout.PAGE_START);
       add(projectPane, BorderLayout.CENTER);
 
       setVisible(true);

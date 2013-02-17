@@ -22,6 +22,7 @@ import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreeModel;
 
 import org.davidmason.zayf.ui.ProjectsTree;
@@ -58,5 +59,10 @@ public class ProjectTreeView extends JPanel
    public void showProjectTree(TreeModel model)
    {
       projectsTree.setModel(model);
+   }
+
+   public void addSelectionListener(TreeSelectionListener listener)
+   {
+      projectsTree.addTreeSelectionListener(listener);
    }
 }
