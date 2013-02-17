@@ -33,13 +33,13 @@ import org.zanata.rest.dto.resource.TextFlow;
 public class TextFlowPanel extends JPanel
 {
 
-   private TextFlow textFlow;
+   private static final long serialVersionUID = 1L;
+
    private JLabel idLabel, revisionLabel, languageLabel;
    private JTextArea textFlowPane;
 
    public TextFlowPanel()
    {
-      textFlow = null;
       setLayout(new BorderLayout());
       idLabel = new JLabel("ID:");
       revisionLabel = new JLabel("Revision:");
@@ -75,8 +75,6 @@ public class TextFlowPanel extends JPanel
 
    public void update(TextFlow textFlow)
    {
-      this.textFlow = textFlow;
-
       idLabel.setText("ID: " + textFlow.getId());
 
       int revision = textFlow.getRevision() == null ? 0 : textFlow.getRevision();

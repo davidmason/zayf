@@ -35,7 +35,8 @@ import org.zanata.common.LocaleId;
 public class TextFlowTargetPanel extends JPanel
 {
 
-   private TextFlowTarget textFlowTarget;
+   private static final long serialVersionUID = 1L;
+
    private JLabel idLabel, revisionLabel, stateLabel;
    //TODO: show resource revision, description, person ?
    private JTextArea textFlowTargetPane;
@@ -43,7 +44,6 @@ public class TextFlowTargetPanel extends JPanel
 
    public TextFlowTargetPanel(LocaleId targetLocale)
    {
-      textFlowTarget = null;
       this.targetLocale = targetLocale;
       setLayout(new BorderLayout());
       idLabel = new JLabel("ID:");
@@ -80,8 +80,6 @@ public class TextFlowTargetPanel extends JPanel
 
    public void update(TextFlowTarget textFlowTarget)
    {
-      this.textFlowTarget = textFlowTarget;
-
       idLabel.setText("ID: " + textFlowTarget.getResId());
 
       int revision = textFlowTarget.getRevision() == null ? 0 : textFlowTarget.getRevision();

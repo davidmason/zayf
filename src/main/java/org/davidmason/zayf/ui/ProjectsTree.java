@@ -28,13 +28,33 @@ import org.zanata.rest.dto.resource.ResourceMeta;
 import org.zanata.rest.dto.resource.TextFlow;
 import org.zanata.rest.dto.resource.TextFlowTarget;
 
-@SuppressWarnings("serial")
 public class ProjectsTree extends JTree
 {
 
-   ProjectsTree(TreeModel treeModel)
+   private static final long serialVersionUID = 1L;
+
+   public ProjectsTree()
+   {
+      super();
+      setAppearanceParameters();
+      // TODO set empty model
+   }
+
+   public ProjectsTree(TreeModel treeModel)
    {
       super(treeModel);
+      setAppearanceParameters();
+   }
+
+   private void setAppearanceParameters()
+   {
+      setRootVisible(false);
+      putClientProperty("JTree.lineStyle", "None");
+   }
+
+   public void setModel(TreeModel newModel)
+   {
+      super.setModel(newModel);
    }
 
    @Override

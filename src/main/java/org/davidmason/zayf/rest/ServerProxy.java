@@ -33,6 +33,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DataConfiguration;
 import org.apache.commons.configuration.HierarchicalINIConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
+import org.davidmason.zayf.model.ServerInfo;
 import org.jboss.resteasy.client.ClientResponse;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.client.IProjectResource;
@@ -105,6 +106,7 @@ public class ServerProxy
    private void loadZanataUserConfig()
    {
       File userConfig = new File(System.getProperty("user.home"), DEFAULT_CONFIG_LOCATION);
+      System.out.println("Config file: " + userConfig.getAbsolutePath());
       try
       {
          HierarchicalINIConfiguration config = new HierarchicalINIConfiguration(userConfig);
@@ -117,7 +119,6 @@ public class ServerProxy
          System.out.println("Failed to load configuration from " + userConfig.getAbsolutePath());
          e.printStackTrace();
       }
-
    }
 
    private List<ServerInfo> getServerList(DataConfiguration serverConfig)
@@ -206,7 +207,10 @@ public class ServerProxy
     */
    public List<Project> getProjectList()
    {
-      IProjectsResource projectListResource = requestFactory.getProjects(getRestURI(serverURI));
+
+      URI restURI = getRestURI(serverURI);
+      System.out.println("rest uri for project list: " + restURI);
+      IProjectsResource projectListResource = requestFactory.getProjects(restURI);
 
       ClientResponse<Project[]> projectListResponse = projectListResource.get();
       if (projectListResponse.getStatus() >= 399)

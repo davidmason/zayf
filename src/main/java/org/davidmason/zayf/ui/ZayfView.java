@@ -26,18 +26,32 @@ import org.zanata.rest.dto.resource.*;
 import org.davidmason.zayf.persistence.FileIO;
 import org.davidmason.zayf.rest.*;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.tree.*;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 /**
  * Swing UI for Zayf client
@@ -60,7 +74,7 @@ public class ZayfView extends JFrame
    private TextFlowPanel textFlowPanel;
    private TextFlowTargetPanel textFlowTargetPanel;
    private StatusBar statusBar;
-   private Container centrePanel;
+   private JPanel centrePanel;
 
    private ServerProxy serverProxy;
    private String url = "http://localhost:8080/zanata/";
