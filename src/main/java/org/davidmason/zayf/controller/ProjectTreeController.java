@@ -64,13 +64,13 @@ public class ProjectTreeController
                   (DefaultMutableTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();
             if (node == null)
             {
-               projectDetailsDisplayer.loadProject(null);
+               projectDetailsDisplayer.loadProject(null, null);
                return;
             }
 
             // only showing projects in tree
             Project project = (Project) node.getUserObject();
-            projectDetailsDisplayer.loadProject(project);
+            projectDetailsDisplayer.loadProject(project, server);
          }
       };
       return listener;

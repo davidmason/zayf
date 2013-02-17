@@ -18,13 +18,23 @@
  */
 package org.davidmason.zayf.view;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.util.List;
+
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 
+import org.zanata.common.EntityStatus;
 import org.zanata.rest.dto.Project;
+import org.zanata.rest.dto.ProjectIteration;
 
 /**
- * Responsible for displaying basic details and a list of versions for a project.
+ * Responsible for displaying basic details and a list of versions for a
+ * project.
  * 
  * @author David Mason, dr.d.mason@gmail.com
  * 
@@ -35,16 +45,18 @@ public class ProjectDetailsView extends JPanel
    private static final long serialVersionUID = 1L;
 
    private static final String NO_PROJECT_SELECTED = "No project selected";
+   private static final String NO_VERSIONS = "No versions to display";
    private static final String ID_FIELD_NAME = "ID: ";
    private static final String NAME_FIELD_NAME = "Name: ";
    private static final String DESC_FIELD_NAME = "Desc: ";
 
-   private JPanel noProjectPanel;
-   private JPanel projectPanel;
+   private JSplitPane projectPanel;
+   private JPanel projectDetailPanel, noProjectPanel, versionPanel, noVersionsPanel;
 
-   private JLabel noProjectLabel, idLabel, nameLabel, descLabel;
+   private JLabel noProjectLabel, noVersionLabel, idLabel, nameLabel, descLabel;
 
    private boolean showingProject;
+   private boolean showingVersions;
 
    public ProjectDetailsView()
    {
@@ -53,22 +65,61 @@ public class ProjectDetailsView extends JPanel
 
    private void buildGui()
    {
-      noProjectPanel = new JPanel();
-      noProjectLabel = new JLabel(NO_PROJECT_SELECTED);
-      noProjectPanel.add(noProjectLabel);
+      setLayout(new BorderLayout());
+      buildProjectPanel();
+      buildNoProjectPanel();
 
-      projectPanel = new JPanel();
+      add(noProjectPanel, BorderLayout.CENTER);
+      showingProject = false;
+   }
+
+   private void buildProjectPanel()
+   {
+      buildVersionPanel();
+      buildNoVersionPanel();
+      buildProjectDetailPanel();
+
+      projectPanel =
+            new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, projectDetailPanel, noVersionsPanel);
+      projectPanel.setDividerLocation(80);
+      projectPanel.setDividerSize(3);
+      projectPanel.setEnabled(true);
+
+      showingVersions = false;
+   }
+
+   private void buildProjectDetailPanel()
+   {
+      projectDetailPanel = new JPanel();
 
       idLabel = new JLabel(ID_FIELD_NAME);
       nameLabel = new JLabel(NAME_FIELD_NAME);
       descLabel = new JLabel(DESC_FIELD_NAME);
 
-      projectPanel.add(idLabel);
-      projectPanel.add(nameLabel);
-      projectPanel.add(descLabel);
+      projectDetailPanel.add(idLabel);
+      projectDetailPanel.add(nameLabel);
+      projectDetailPanel.add(descLabel);
+   }
 
-      add(noProjectPanel);
-      showingProject = false;
+   private void buildNoProjectPanel()
+   {
+      noProjectPanel = new JPanel();
+      noProjectLabel = new JLabel(NO_PROJECT_SELECTED);
+      noProjectPanel.add(noProjectLabel);
+   }
+
+   private void buildVersionPanel()
+   {
+      // TODO use buttons for each version, flowlayout should be fine
+      versionPanel = new JPanel();
+      // TODO adjust horizontal and vertical padding
+   }
+
+   private void buildNoVersionPanel()
+   {
+      noVersionsPanel = new JPanel();
+      noVersionLabel = new JLabel(NO_VERSIONS);
+      noVersionsPanel.add(noVersionLabel);
    }
 
    /**
@@ -106,5 +157,48 @@ public class ProjectDetailsView extends JPanel
       add(projectPanel);
       showingProject = true;
       validate();
+   }
+
+   public void showVersions(List<ProjectIteration> versions)
+   {
+      // clear iterations from display
+      versionPanel.removeAll();
+
+      if (versions.isEmpty())
+      {
+         if (showingVersions)
+         {
+            projectPanel.remove(versionPanel);
+            projectPanel.add(noVersionsPanel, JSplitPane.BOTTOM);
+            showingVersions = false;
+         }
+         return;
+      }
+      // show each version
+      for (ProjectIteration version : versions)
+      {
+         if (version.getStatus() != EntityStatus.OBSOLETE)
+         {
+            versionPanel.add(buildVersionTile(version));
+         }
+      }
+      projectPanel.remove(noVersionsPanel);
+      projectPanel.add(versionPanel, JSplitPane.BOTTOM);
+      showingVersions = true;
+   }
+
+   private Component buildVersionTile(ProjectIteration version)
+   {
+      JButton tile = new JButton();
+      if (version.getStatus() == EntityStatus.READONLY)
+      {
+         tile.setBackground(Color.PINK);
+         tile.setText(version.getId() + " (read only)");
+      }
+      else
+      {
+         tile.setText(version.getId());
+      }
+      return tile;
    }
 }

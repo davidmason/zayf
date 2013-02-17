@@ -18,8 +18,12 @@
  */
 package org.davidmason.zayf.controller;
 
+import java.util.List;
+
 import org.davidmason.zayf.view.ProjectDetailsView;
 import org.zanata.rest.dto.Project;
+import org.zanata.rest.dto.ProjectIteration;
+import org.davidmason.zayf.rest.ServerProxy;
 
 public class ProjectDetailsController
 {
@@ -38,10 +42,11 @@ public class ProjectDetailsController
     * @param project
     *           for which to show details, or null to show no project.
     */
-   public void loadProject(Project project)
+   public void loadProject(Project project, ServerProxy server)
    {
       view.showProjectDetails(project);
 
-      // TODO look up versions and show in view
+      List<ProjectIteration> versionList = server.getVersionList(project.getId());
+      view.showVersions(versionList);
    }
 }

@@ -48,6 +48,8 @@ public class MainWindow extends JFrame
    // FIXME use real view
    private JPanel versionDetailsView;
 
+   private JSplitPane projectPane, projectDetailsPane;
+
    //   private DocumentsView docsView;
 
    public MainWindow(ServerSelectView serverSelect,
@@ -75,14 +77,14 @@ public class MainWindow extends JFrame
       setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
       setLocationRelativeTo(null); // centre screen
 
-      JSplitPane projectDetailsPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false,
-                                                     projectDetailsView, versionDetailsView);
+      projectDetailsPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false,
+                                          projectDetailsView, versionDetailsView);
       projectDetailsPane.setDividerLocation(200);
       projectDetailsPane.setDividerSize(3);
       projectDetailsPane.setEnabled(true);
 
-      JSplitPane projectPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                                              false, projectTree, projectDetailsPane);
+      projectPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                                   false, projectTree, projectDetailsPane);
       projectPane.setDividerLocation(300);
       projectPane.setDividerSize(3);
       projectPane.setEnabled(true);
