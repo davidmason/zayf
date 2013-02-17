@@ -21,7 +21,6 @@ package org.davidmason.zayf.view;
 import java.awt.BorderLayout;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 /**
@@ -44,24 +43,20 @@ public class MainWindow extends JFrame
    private ServerSelectView serverSelect;
    private ProjectTreeView projectTree;
    private ProjectDetailsView projectDetailsView;
-
-   // FIXME use real view
-   private JPanel versionDetailsView;
+   private VersionDetailsView versionDetailsView;
 
    private JSplitPane projectPane, projectDetailsPane;
 
    //   private DocumentsView docsView;
 
-   public MainWindow(ServerSelectView serverSelect,
-                     ProjectTreeView projectTreeView, ProjectDetailsView projectDetailsView,
+   public MainWindow(ServerSelectView serverSelect, ProjectTreeView projectTreeView,
+                     ProjectDetailsView projectDetailsView, VersionDetailsView versionDetailsView,
                      DocumentsView documentsView)
    {
       this.serverSelect = serverSelect;
       this.projectTree = projectTreeView;
       this.projectDetailsView = projectDetailsView;
-
-      // FIXME use real view
-      this.versionDetailsView = new JPanel();
+      this.versionDetailsView = versionDetailsView;
 
       //      this.docsView = documentsView;
 
@@ -79,7 +74,7 @@ public class MainWindow extends JFrame
 
       projectDetailsPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false,
                                           projectDetailsView, versionDetailsView);
-      projectDetailsPane.setDividerLocation(200);
+      projectDetailsPane.setDividerLocation(120);
       projectDetailsPane.setDividerSize(3);
       projectDetailsPane.setEnabled(true);
 

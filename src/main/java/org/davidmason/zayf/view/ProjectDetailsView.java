@@ -21,6 +21,7 @@ package org.davidmason.zayf.view;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -46,7 +47,7 @@ public class ProjectDetailsView extends JPanel
 
    private static final String NO_PROJECT_SELECTED = "No project selected";
    private static final String NO_VERSIONS = "No versions to display";
-   private static final String ID_FIELD_NAME = "ID: ";
+   private static final String ID_FIELD_NAME = "Project ID: ";
    private static final String NAME_FIELD_NAME = "Name: ";
    private static final String DESC_FIELD_NAME = "Desc: ";
 
@@ -57,6 +58,8 @@ public class ProjectDetailsView extends JPanel
 
    private boolean showingProject;
    private boolean showingVersions;
+
+   private ActionListener versionSelectedListener;
 
    public ProjectDetailsView()
    {
@@ -164,7 +167,7 @@ public class ProjectDetailsView extends JPanel
       // clear iterations from display
       versionPanel.removeAll();
 
-      if (versions.isEmpty())
+      if (versions == null || versions.isEmpty())
       {
          if (showingVersions)
          {
@@ -199,6 +202,14 @@ public class ProjectDetailsView extends JPanel
       {
          tile.setText(version.getId());
       }
+      // version ID will be used by project controller to look up the version to display.
+      tile.setActionCommand(version.getId());
+      tile.addActionListener(versionSelectedListener);
       return tile;
+   }
+
+   public void setVersionSelectedListener(ActionListener listener)
+   {
+      this.versionSelectedListener = listener;
    }
 }

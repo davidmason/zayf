@@ -21,13 +21,14 @@ package org.davidmason.zayf.core;
 import org.davidmason.zayf.controller.ProjectDetailsController;
 import org.davidmason.zayf.controller.ProjectTreeController;
 import org.davidmason.zayf.controller.ServerSelectController;
+import org.davidmason.zayf.controller.VersionDetailsController;
 import org.davidmason.zayf.view.DocumentsView;
 import org.davidmason.zayf.view.MainWindow;
 import org.davidmason.zayf.view.ProjectDetailsView;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.davidmason.zayf.view.ServerSelectView;
-
 //import org.davidmason.zayf.ui.ZayfView;
+import org.davidmason.zayf.view.VersionDetailsView;
 
 /**
  * Zayf entry point, currently responsible for wiring the application
@@ -45,9 +46,13 @@ public class Zayf
          {
             System.out.println("Loading application.");
 
+            VersionDetailsView verDetailsView = new VersionDetailsView();
+            VersionDetailsController verDetailsControl =
+                  new VersionDetailsController(verDetailsView);
+
             ProjectDetailsView projDetailsView = new ProjectDetailsView();
             ProjectDetailsController projDetailsControl =
-                  new ProjectDetailsController(projDetailsView);
+                  new ProjectDetailsController(projDetailsView, verDetailsControl);
 
             ProjectTreeView projTreeView = new ProjectTreeView();
             ProjectTreeController projTreeControl =
@@ -58,7 +63,8 @@ public class Zayf
 
             DocumentsView documentsView = new DocumentsView();
 
-            new MainWindow(serverSelectView, projTreeView, projDetailsView, documentsView);
+            new MainWindow(serverSelectView, projTreeView, projDetailsView, verDetailsView,
+                           documentsView);
          }
       });
    }

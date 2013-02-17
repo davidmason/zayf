@@ -18,6 +18,8 @@
  */
 package org.davidmason.zayf.controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import org.davidmason.zayf.view.ProjectDetailsView;
@@ -29,10 +31,38 @@ public class ProjectDetailsController
 {
 
    private ProjectDetailsView view;
+   private final VersionDetailsController versionDisplayer;
+   private List<ProjectIteration> versionList;
 
-   public ProjectDetailsController(ProjectDetailsView view)
+   public ProjectDetailsController(ProjectDetailsView view,
+                                   VersionDetailsController versionDetailsController)
    {
       this.view = view;
+      this.versionDisplayer = versionDetailsController;
+      versionList = null;
+      view.setVersionSelectedListener(new ActionListener()
+      {
+
+         @Override
+         public void actionPerformed(ActionEvent e)
+         {
+            String versionId = e.getActionCommand();
+            if (versionList != null)
+            {
+               for (ProjectIteration version : versionList)
+               {
+                  if (version.getId().equals(versionId))
+                  {
+                     versionDisplayer.showVersion(version);
+                     return;
+                  }
+               }
+               // didn't find version
+               // TODO some kind of error
+               System.out.println("Didn't find expected version: " + versionId);
+            }
+         }
+      });
    }
 
    /**
@@ -46,7 +76,7 @@ public class ProjectDetailsController
    {
       view.showProjectDetails(project);
 
-      List<ProjectIteration> versionList = server.getVersionList(project.getId());
+      versionList = server.getVersionList(project.getId());
       view.showVersions(versionList);
    }
 }
