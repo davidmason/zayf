@@ -78,5 +78,8 @@ public class ProjectDetailsController
 
       versionList = server.getVersionList(project.getId());
       view.showVersions(versionList);
+
+      // clear version display to avoid confusion
+      versionDisplayer.showVersion(null);
    }
 }

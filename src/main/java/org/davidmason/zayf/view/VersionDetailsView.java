@@ -85,6 +85,8 @@ public class VersionDetailsView extends JPanel
             remove(versionPanel);
             add(noVersionPanel, BorderLayout.CENTER);
             showingVersion = false;
+            // FIXME looks like parent container needs to be refreshed here.
+            // resize makes it display properly
             validate();
          }
          return;
