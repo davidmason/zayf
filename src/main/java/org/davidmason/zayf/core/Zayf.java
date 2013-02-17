@@ -18,25 +18,42 @@
  */
 package org.davidmason.zayf.core;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
+import org.davidmason.zayf.controller.ProjectTreeController;
+import org.davidmason.zayf.controller.ServerSelectController;
+import org.davidmason.zayf.view.DocumentsView;
+import org.davidmason.zayf.view.MainWindow;
+import org.davidmason.zayf.view.ProjectTreeView;
+import org.davidmason.zayf.view.ServerSelectView;
 
-import org.davidmason.zayf.ui.ZayfView;
+//import org.davidmason.zayf.ui.ZayfView;
 
 /**
- * Zayf entry point
+ * Zayf entry point, currently responsible for wiring the application
+ * (until an appropriate framework is employed)
  */
 public class Zayf
 {
 
-   public static void main(String[] args) throws MalformedURLException, URISyntaxException
+   public static void main(String[] args)
    {
       javax.swing.SwingUtilities.invokeLater(new Runnable()
       {
 
          public void run()
          {
-            new ZayfView();
+            System.out.println("Loading application.");
+
+            ProjectTreeView projectTreeView = new ProjectTreeView();
+            ProjectTreeController projectTreeController =
+                  new ProjectTreeController(projectTreeView);
+
+            ServerSelectController serverController =
+                  new ServerSelectController(projectTreeController);
+            ServerSelectView serverSelectView = new ServerSelectView(serverController);
+
+            DocumentsView documentsView = new DocumentsView();
+
+            new MainWindow(serverSelectView, projectTreeView, documentsView);
          }
       });
    }
