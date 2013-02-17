@@ -35,7 +35,7 @@ public class MainWindow extends JFrame
 
    private static final long serialVersionUID = 1L;
 
-   private static final String WINDOW_TITLE = "Zayf";
+   private static final String WINDOW_TITLE = "Zayf | Zanata at your Fingertips";
 
    // TODO get these from config
    private static final int WINDOW_HEIGHT = 600;
