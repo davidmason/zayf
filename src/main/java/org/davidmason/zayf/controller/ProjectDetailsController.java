@@ -41,6 +41,11 @@ public class ProjectDetailsController
       this.view = view;
       this.versionDisplayer = versionDetailsController;
       versionList = null;
+      setupVersionSelectionListener();
+   }
+
+   private void setupVersionSelectionListener()
+   {
       view.setVersionSelectedListener(new ActionListener()
       {
 
@@ -82,6 +87,6 @@ public class ProjectDetailsController
       view.showVersions(versionList);
 
       // clear version display to avoid confusion
-      versionDisplayer.showVersion(null, null);
+      versionDisplayer.showVersion(project, null);
    }
 }

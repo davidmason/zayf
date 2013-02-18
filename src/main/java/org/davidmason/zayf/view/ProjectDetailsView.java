@@ -174,6 +174,7 @@ public class ProjectDetailsView extends JPanel
             projectPanel.remove(versionPanel);
             projectPanel.add(noVersionsPanel, JSplitPane.BOTTOM);
             showingVersions = false;
+            revalidate();
          }
          return;
       }
@@ -185,9 +186,13 @@ public class ProjectDetailsView extends JPanel
             versionPanel.add(buildVersionTile(version));
          }
       }
-      projectPanel.remove(noVersionsPanel);
-      projectPanel.add(versionPanel, JSplitPane.BOTTOM);
-      showingVersions = true;
+      if (!showingVersions)
+      {
+         projectPanel.remove(noVersionsPanel);
+         projectPanel.add(versionPanel, JSplitPane.BOTTOM);
+         showingVersions = true;
+      }
+      revalidate();
    }
 
    private Component buildVersionTile(ProjectIteration version)

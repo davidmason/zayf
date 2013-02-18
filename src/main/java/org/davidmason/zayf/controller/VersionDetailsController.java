@@ -65,5 +65,4 @@ public class VersionDetailsController
       view.displayVersion(version);
    }
 
-   //   view.
 }

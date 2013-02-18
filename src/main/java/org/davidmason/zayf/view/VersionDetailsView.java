@@ -89,9 +89,8 @@ public class VersionDetailsView extends JPanel
             remove(versionPanel);
             add(noVersionPanel, BorderLayout.CENTER);
             showingVersion = false;
-            // FIXME looks like parent container needs to be refreshed here.
-            // resize makes it display properly
-            validate();
+            revalidate();
+            repaint();
          }
          return;
       }
@@ -105,8 +104,9 @@ public class VersionDetailsView extends JPanel
          remove(noVersionPanel);
          add(versionPanel, BorderLayout.CENTER);
          showingVersion = true;
-         validate();
       }
+      revalidate();
+      repaint();
    }
 
    public void setShowDocsListener(ActionListener listener)
