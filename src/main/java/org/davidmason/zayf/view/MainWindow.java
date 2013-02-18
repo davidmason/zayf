@@ -47,11 +47,8 @@ public class MainWindow extends JFrame
 
    private JSplitPane projectPane, projectDetailsPane;
 
-   //   private DocumentsView docsView;
-
    public MainWindow(ServerSelectView serverSelect, ProjectTreeView projectTreeView,
-                     ProjectDetailsView projectDetailsView, VersionDetailsView versionDetailsView,
-                     DocumentsView documentsView)
+                     ProjectDetailsView projectDetailsView, VersionDetailsView versionDetailsView)
    {
       this.serverSelect = serverSelect;
       this.projectTree = projectTreeView;

@@ -19,6 +19,7 @@
 package org.davidmason.zayf.view;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -41,6 +42,7 @@ public class VersionDetailsView extends JPanel
 
    private JPanel noVersionPanel, versionPanel, buttonPanel;
    private JLabel noVersionLabel, idLabel, fakeStatsLabel;
+   private JButton docsButton;
 
    private boolean showingVersion;
 
@@ -63,7 +65,9 @@ public class VersionDetailsView extends JPanel
       idLabel = new JLabel("");
       fakeStatsLabel = new JLabel(FAKE_STATS_MESSAGE);
       buttonPanel = new JPanel();
-      buttonPanel.add(new JButton("test"));
+      docsButton = new JButton("documents");
+      docsButton.setActionCommand("show-documents");
+      buttonPanel.add(docsButton);
       buttonPanel.add(new JButton("test"));
       buttonPanel.add(new JButton("test"));
       buttonPanel.add(new JButton("test"));
@@ -103,5 +107,10 @@ public class VersionDetailsView extends JPanel
          showingVersion = true;
          validate();
       }
+   }
+
+   public void setShowDocsListener(ActionListener listener)
+   {
+      docsButton.addActionListener(listener);
    }
 }

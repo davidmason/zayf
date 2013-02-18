@@ -33,6 +33,7 @@ public class ProjectDetailsController
    private ProjectDetailsView view;
    private final VersionDetailsController versionDisplayer;
    private List<ProjectIteration> versionList;
+   private Project project;
 
    public ProjectDetailsController(ProjectDetailsView view,
                                    VersionDetailsController versionDetailsController)
@@ -53,7 +54,7 @@ public class ProjectDetailsController
                {
                   if (version.getId().equals(versionId))
                   {
-                     versionDisplayer.showVersion(version);
+                     versionDisplayer.showVersion(project, version);
                      return;
                   }
                }
@@ -74,12 +75,13 @@ public class ProjectDetailsController
     */
    public void loadProject(Project project, ServerProxy server)
    {
+      this.project = project;
       view.showProjectDetails(project);
 
       versionList = server.getVersionList(project.getId());
       view.showVersions(versionList);
 
       // clear version display to avoid confusion
-      versionDisplayer.showVersion(null);
+      versionDisplayer.showVersion(null, null);
    }
 }

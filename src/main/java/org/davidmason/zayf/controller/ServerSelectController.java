@@ -30,10 +30,13 @@ public class ServerSelectController
 {
 
    private ProjectTreeController projectTreeController;
+   private DocumentsController docsController;
 
-   public ServerSelectController(ProjectTreeController projectTreeController)
+   public ServerSelectController(ProjectTreeController projectTreeController,
+                                 DocumentsController docsController)
    {
       this.projectTreeController = projectTreeController;
+      this.docsController = docsController;
    }
 
    public List<ServerInfo> getServerInfo()
@@ -61,6 +64,8 @@ public class ServerSelectController
       System.out.println("Show projects for " + info.getServerUrl());
       projectTreeController.setServer(proxy);
       projectTreeController.fetchProjectList();
+      // FIXME normalize how server proxy is accessed
+      docsController.setServer(proxy);
    }
 
 }

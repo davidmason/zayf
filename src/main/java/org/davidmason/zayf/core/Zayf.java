@@ -18,6 +18,11 @@
  */
 package org.davidmason.zayf.core;
 
+import java.awt.BorderLayout;
+
+import javax.swing.JFrame;
+
+import org.davidmason.zayf.controller.DocumentsController;
 import org.davidmason.zayf.controller.ProjectDetailsController;
 import org.davidmason.zayf.controller.ProjectTreeController;
 import org.davidmason.zayf.controller.ServerSelectController;
@@ -27,7 +32,6 @@ import org.davidmason.zayf.view.MainWindow;
 import org.davidmason.zayf.view.ProjectDetailsView;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.davidmason.zayf.view.ServerSelectView;
-//import org.davidmason.zayf.ui.ZayfView;
 import org.davidmason.zayf.view.VersionDetailsView;
 
 /**
@@ -45,27 +49,49 @@ public class Zayf
          public void run()
          {
             System.out.println("Loading application.");
-
-            VersionDetailsView verDetailsView = new VersionDetailsView();
-            VersionDetailsController verDetailsControl =
-                  new VersionDetailsController(verDetailsView);
-
-            ProjectDetailsView projDetailsView = new ProjectDetailsView();
-            ProjectDetailsController projDetailsControl =
-                  new ProjectDetailsController(projDetailsView, verDetailsControl);
-
-            ProjectTreeView projTreeView = new ProjectTreeView();
-            ProjectTreeController projTreeControl =
-                  new ProjectTreeController(projTreeView, projDetailsControl);
-
-            ServerSelectController serverControl = new ServerSelectController(projTreeControl);
-            ServerSelectView serverSelectView = new ServerSelectView(serverControl);
-
-            DocumentsView documentsView = new DocumentsView();
-
-            new MainWindow(serverSelectView, projTreeView, projDetailsView, verDetailsView,
-                           documentsView);
+            runApplication();
          }
       });
+   }
+
+   /**
+    * 
+    */
+   private static void runApplication()
+   {
+      DocumentsView docsView = new DocumentsView();
+      DocumentsController docsControl = new DocumentsController(docsView);
+
+      // documents window
+      // TODO extract to class
+      JFrame docsFrame = new JFrame();
+      docsFrame.setTitle("Zayf | documents | PROJECT : VERSION");
+      docsFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+      docsFrame.setLayout(new BorderLayout());
+      docsFrame.setBounds(0, 0, 480, 640);
+      docsFrame.setLocationRelativeTo(null);
+      docsFrame.add(docsView, BorderLayout.CENTER);
+      docsFrame.setVisible(true);
+      // FIXME structure so that controller can show and hide docs window
+
+      // main window
+      VersionDetailsView verDetailsView = new VersionDetailsView();
+      VersionDetailsController verDetailsControl =
+            new VersionDetailsController(verDetailsView, docsControl);
+
+      ProjectDetailsView projDetailsView = new ProjectDetailsView();
+      ProjectDetailsController projDetailsControl =
+            new ProjectDetailsController(projDetailsView, verDetailsControl);
+
+      ProjectTreeView projTreeView = new ProjectTreeView();
+      ProjectTreeController projTreeControl =
+            new ProjectTreeController(projTreeView, projDetailsControl);
+
+      ServerSelectController serverControl =
+            new ServerSelectController(projTreeControl, docsControl);
+      ServerSelectView serverSelectView = new ServerSelectView(serverControl);
+
+      new MainWindow(serverSelectView, projTreeView, projDetailsView, verDetailsView);
+
    }
 }

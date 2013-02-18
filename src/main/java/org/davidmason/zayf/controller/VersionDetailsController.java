@@ -18,17 +18,39 @@
  */
 package org.davidmason.zayf.controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import org.davidmason.zayf.view.VersionDetailsView;
+import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 
 public class VersionDetailsController
 {
 
    private VersionDetailsView view;
+   private DocumentsController docsController;
 
-   public VersionDetailsController(VersionDetailsView view)
+   private ProjectIteration version;
+   private Project project;
+
+   public VersionDetailsController(VersionDetailsView view, DocumentsController docsControl)
    {
       this.view = view;
+      this.docsController = docsControl;
+
+      view.setShowDocsListener(new ActionListener()
+      {
+
+         @Override
+         public void actionPerformed(ActionEvent e)
+         {
+            if (e.getActionCommand().equals("show-documents"))
+            {
+               docsController.fetchDocumentList(project, version);
+            }
+         }
+      });
    }
 
    /**
@@ -36,9 +58,12 @@ public class VersionDetailsController
     * 
     * @param version
     */
-   public void showVersion(ProjectIteration version)
+   public void showVersion(Project project, ProjectIteration version)
    {
+      this.project = project;
+      this.version = version;
       view.displayVersion(version);
    }
 
+   //   view.
 }
