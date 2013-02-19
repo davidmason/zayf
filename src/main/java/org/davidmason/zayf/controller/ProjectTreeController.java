@@ -18,7 +18,10 @@
  */
 package org.davidmason.zayf.controller;
 
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.event.TreeSelectionEvent;
@@ -101,6 +104,16 @@ public class ProjectTreeController
       DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
 
       List<Project> projectList = server.getProjectList();
+      Collections.sort(projectList, new Comparator<Project>()
+      {
+
+         @Override
+         public int compare(Project proj1, Project proj2)
+         {
+            return Collator.getInstance().compare(proj1.getName(), proj2.getName());
+         }
+      });
+
       List<DefaultMutableTreeNode> projectNodes = new ArrayList<DefaultMutableTreeNode>();
       for (Project project : projectList)
       {
