@@ -37,8 +37,8 @@ public class MainWindow extends JFrame
    private static final String WINDOW_TITLE = "Zayf | Zanata at your Fingertips";
 
    // TODO get these from config
-   private static final int WINDOW_HEIGHT = 600;
-   private static final int WINDOW_WIDTH = 800;
+   private static final int WINDOW_HEIGHT = 768;
+   private static final int WINDOW_WIDTH = 1024;
 
    private ServerSelectView serverSelect;
    private ProjectTreeView projectTree;
