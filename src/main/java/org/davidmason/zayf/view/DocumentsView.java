@@ -20,8 +20,7 @@ package org.davidmason.zayf.view;
 
 import java.awt.BorderLayout;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -29,12 +28,13 @@ import javax.swing.tree.TreeModel;
 
 import org.zanata.rest.dto.resource.ResourceMeta;
 
-public class DocumentsView extends JPanel
+public class DocumentsView extends JFrame
 {
 
    private static final long serialVersionUID = 1L;
 
-   private JLabel fooLabel;
+   private static final String TITLE_PREFIX = "Zayf - documents - ";
+
    private JTree documentsTree;
    private JScrollPane treeView;
 
@@ -46,8 +46,11 @@ public class DocumentsView extends JPanel
    private void buildGui()
    {
       setLayout(new BorderLayout());
-      fooLabel = new JLabel("Documents will go here.");
-      add(fooLabel, BorderLayout.CENTER);
+      setTitle(TITLE_PREFIX);
+      setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+      setBounds(0, 0, 480, 640);
+      // TODO position relative to other window
+      setLocationRelativeTo(null);
 
       documentsTree = new JTree()
       {
@@ -67,16 +70,28 @@ public class DocumentsView extends JPanel
          }
       };
 
-      documentsTree.setRootVisible(false);
+      documentsTree.setRootVisible(true);
       documentsTree.putClientProperty("JTree.lineStyle", "Angled");
 
       treeView = new JScrollPane(documentsTree);
       add(treeView, BorderLayout.CENTER);
    }
 
+   @Override
+   public void setTitle(String title)
+   {
+      super.setTitle(TITLE_PREFIX + title);
+   }
+
    public void showDocumentsTree(TreeModel model)
    {
       documentsTree.setModel(model);
+      // expand all nodes (for demonstration purposes)
+      for (int row = 0; row < documentsTree.getRowCount(); row++)
+      {
+         documentsTree.expandRow(row);
+      }
+      setVisible(true);
    }
 
    // TODO put this in a util class, or use existing util class if present

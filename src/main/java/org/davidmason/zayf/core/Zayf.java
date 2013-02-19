@@ -18,10 +18,6 @@
  */
 package org.davidmason.zayf.core;
 
-import java.awt.BorderLayout;
-
-import javax.swing.JFrame;
-
 import org.davidmason.zayf.controller.DocumentsController;
 import org.davidmason.zayf.controller.ProjectDetailsController;
 import org.davidmason.zayf.controller.ProjectTreeController;
@@ -59,20 +55,9 @@ public class Zayf
     */
    private static void runApplication()
    {
+      // documents window
       DocumentsView docsView = new DocumentsView();
       DocumentsController docsControl = new DocumentsController(docsView);
-
-      // documents window
-      // TODO extract to class
-      JFrame docsFrame = new JFrame();
-      docsFrame.setTitle("Zayf | documents | PROJECT : VERSION");
-      docsFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-      docsFrame.setLayout(new BorderLayout());
-      docsFrame.setBounds(0, 0, 480, 640);
-      docsFrame.setLocationRelativeTo(null);
-      docsFrame.add(docsView, BorderLayout.CENTER);
-      docsFrame.setVisible(true);
-      // FIXME structure so that controller can show and hide docs window
 
       // main window
       VersionDetailsView verDetailsView = new VersionDetailsView();

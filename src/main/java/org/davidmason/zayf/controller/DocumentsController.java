@@ -65,6 +65,7 @@ public class DocumentsController
       // TODO set window title to project/version
 
       TreeModel model = buildTreeModel(projectId, versionId, documents);
+      view.setTitle(project.getName() + " : " + versionId);
       view.showDocumentsTree(model);
    }
 
