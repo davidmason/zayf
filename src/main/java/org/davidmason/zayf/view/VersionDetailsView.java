@@ -69,7 +69,7 @@ public class VersionDetailsView extends JPanel
       docsButton.setActionCommand("show-documents");
       buttonPanel.add(docsButton);
       JButton trackProjectButton = new JButton("Track Project");
-      trackProjectButton.setToolTipText("<html>Download a copy of this project, and generate a workspace with all the files.<br/>"
+      trackProjectButton.setToolTipText("<html>Download a copy of this project, and generate a workspace with all the documents.<br/>"
                                         +
                                         "Will periodically synchronize changes between the server and workspace.</html>");
       trackProjectButton.setEnabled(false);
