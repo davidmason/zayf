@@ -65,12 +65,23 @@ public class VersionDetailsView extends JPanel
       idLabel = new JLabel("");
       fakeStatsLabel = new JLabel(FAKE_STATS_MESSAGE);
       buttonPanel = new JPanel();
-      docsButton = new JButton("documents");
+      docsButton = new JButton("Documents");
       docsButton.setActionCommand("show-documents");
       buttonPanel.add(docsButton);
-      buttonPanel.add(new JButton("test"));
-      buttonPanel.add(new JButton("test"));
-      buttonPanel.add(new JButton("test"));
+      JButton trackProjectButton = new JButton("Track Project");
+      trackProjectButton.setToolTipText("<html>Download a copy of this project, and generate a workspace with all the files.<br/>"
+                                        +
+                                        "Will periodically synchronize changes between the server and workspace.</html>");
+      trackProjectButton.setEnabled(false);
+      buttonPanel.add(trackProjectButton);
+      JButton checkServerButton = new JButton("Check Server");
+      checkServerButton.setEnabled(false);
+      checkServerButton.setToolTipText("Check for recent changes on the server, update workspace with changes.");
+      buttonPanel.add(checkServerButton);
+      JButton checkWorkspaceButton = new JButton("Check Workspace");
+      checkWorkspaceButton.setToolTipText("Check for any changes in the workspace, push changes to the server.");
+      checkWorkspaceButton.setEnabled(false);
+      buttonPanel.add(checkWorkspaceButton);
 
       versionPanel.add(idLabel, BorderLayout.PAGE_START);
       versionPanel.add(fakeStatsLabel, BorderLayout.CENTER);
