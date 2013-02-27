@@ -18,6 +18,12 @@
  */
 package org.davidmason.zayf.core;
 
+import java.awt.AWTException;
+import java.awt.SystemTray;
+import java.awt.TrayIcon.MessageType;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import org.davidmason.zayf.controller.DocumentsController;
 import org.davidmason.zayf.controller.ProjectDetailsController;
 import org.davidmason.zayf.controller.ProjectTreeController;
@@ -29,6 +35,7 @@ import org.davidmason.zayf.view.ProjectDetailsView;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.davidmason.zayf.view.ServerSelectView;
 import org.davidmason.zayf.view.VersionDetailsView;
+import org.davidmason.zayf.view.ZayfTrayIcon;
 
 /**
  * Zayf entry point, currently responsible for wiring the application
@@ -50,11 +57,10 @@ public class Zayf
       });
    }
 
-   /**
-    * 
-    */
+   // TODO move this to its own class
    private static void runApplication()
    {
+
       // documents window
       DocumentsView docsView = new DocumentsView();
       DocumentsController docsControl = new DocumentsController(docsView);
@@ -76,7 +82,52 @@ public class Zayf
             new ServerSelectController(projTreeControl, docsControl);
       ServerSelectView serverSelectView = new ServerSelectView(serverControl);
 
-      new MainWindow(serverSelectView, projTreeView, projDetailsView, verDetailsView);
+      final MainWindow mainWindow =
+            new MainWindow(serverSelectView, projTreeView, projDetailsView, verDetailsView);
+
+      if (SystemTray.isSupported())
+      {
+         final ZayfTrayIcon icon = new ZayfTrayIcon();
+         try
+         {
+            SystemTray.getSystemTray().add(icon);
+         }
+         catch (AWTException e)
+         {
+            System.out.println("Failed to add tray icon");
+            e.printStackTrace();
+         }
+         icon.addExitListener(new ActionListener()
+         {
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+               // FIXME finish file writes and server communication before exit
+               System.exit(0);
+            }
+         });
+         icon.addIconActionListener(new ActionListener()
+         {
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+               boolean show = !mainWindow.isVisible();
+               if (!show)
+               {
+                  icon.displayMessage("Zayf is minimized",
+                                      "Double-click to restore. Right-click and select 'exit' to close",
+                                      MessageType.INFO);
+               }
+               mainWindow.setVisible(show);
+            }
+         });
+      }
+      else
+      {
+         System.out.println("system tray not supported");
+      }
 
    }
 }
