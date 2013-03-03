@@ -29,7 +29,8 @@ import org.jboss.resteasy.client.ClientResponse;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.client.IProjectResource;
 import org.zanata.rest.client.IProjectsResource;
-import org.zanata.rest.client.ITranslationResources;
+import org.zanata.rest.client.ISourceDocResource;
+import org.zanata.rest.client.ITranslatedDocResource;
 import org.zanata.rest.client.ZanataProxyFactory;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
@@ -146,9 +147,8 @@ public class ServerProxy
     */
    public List<ResourceMeta> getDocList(String projectSlug, String versionSlug)
    {
-      ITranslationResources translationResources =
-            requestFactory.getTranslationResources(projectSlug, versionSlug);
-      ClientResponse<List<ResourceMeta>> getResponse = translationResources.get(null);
+      ISourceDocResource resource = requestFactory.getSourceDocResource(projectSlug, versionSlug);
+      ClientResponse<List<ResourceMeta>> getResponse = resource.get(null);
       if (getResponse.getStatus() >= 399)
       {
          //FIXME use more specific exception class
@@ -160,10 +160,8 @@ public class ServerProxy
 
    public List<TextFlow> getTextFlows(String projectSlug, String versionSlug, String docId)
    {
-      ITranslationResources translationResources =
-            requestFactory.getTranslationResources(projectSlug, versionSlug);
-      ClientResponse<Resource> response =
-            translationResources.getResource(prepareDocId(docId), null);
+      ISourceDocResource resource = requestFactory.getSourceDocResource(projectSlug, versionSlug);
+      ClientResponse<Resource> response = resource.getResource(prepareDocId(docId), null);
       Resource res = response.getEntity();
       return res.getTextFlows();
    }
@@ -171,10 +169,10 @@ public class ServerProxy
    public List<TextFlowTarget> getTargets(String projectSlug, String versionSlug, LocaleId locale,
                                           String docId)
    {
-      ITranslationResources translationResources =
-            requestFactory.getTranslationResources(projectSlug, versionSlug);
+      ITranslatedDocResource resource =
+            requestFactory.getTranslatedDocResource(projectSlug, versionSlug);
       ClientResponse<TranslationsResource> response =
-            translationResources.getTranslations(prepareDocId(docId), locale, null);
+            resource.getTranslations(prepareDocId(docId), locale, null);
       TranslationsResource res = response.getEntity();
       return res.getTextFlowTargets();
    }
