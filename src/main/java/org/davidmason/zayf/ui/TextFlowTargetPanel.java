@@ -24,11 +24,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Rectangle;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.SwingConstants;
 
 import org.zanata.rest.dto.resource.TextFlowTarget;
 import org.zanata.common.ContentState;

@@ -155,6 +155,7 @@ public class FileIO
       return true;
    }
 
+   // FIXME libraries from Zanata should be used to write po files
    /**
     * Saves project as xml meta files and po text flows
     * 
