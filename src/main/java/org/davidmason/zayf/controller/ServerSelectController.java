@@ -25,6 +25,7 @@ import java.util.List;
 import org.davidmason.zayf.config.ConfigLoader;
 import org.davidmason.zayf.model.ServerInfo;
 import org.davidmason.zayf.rest.ServerProxy;
+import org.davidmason.zayf.rest.ServerProxyImpl;
 
 public class ServerSelectController
 {
@@ -59,7 +60,7 @@ public class ServerSelectController
          System.out.println("invalid URL for selected server");
          return;
       }
-      ServerProxy proxy = new ServerProxy(uri, info.getUserName(), info.getApiKey());
+      ServerProxy proxy = new ServerProxyImpl(uri, info.getUserName(), info.getApiKey());
       // TODO hand this to project display controller
       System.out.println("Show projects for " + info.getServerUrl());
       projectTreeController.setServer(proxy);

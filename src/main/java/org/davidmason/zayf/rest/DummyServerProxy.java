@@ -31,7 +31,7 @@ import org.zanata.rest.dto.resource.ResourceMeta;
 import org.zanata.rest.dto.resource.TextFlow;
 import org.zanata.rest.dto.resource.TextFlowTarget;
 
-public class DummyServerProxy extends ServerProxy
+public class DummyServerProxy implements ServerProxy
 {
 
    public DummyServerProxy() throws URISyntaxException

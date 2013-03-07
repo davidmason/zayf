@@ -45,6 +45,7 @@ import javax.swing.tree.DefaultTreeModel;
 import org.davidmason.zayf.persistence.FileIO;
 import org.davidmason.zayf.rest.DummyServerProxy;
 import org.davidmason.zayf.rest.ServerProxy;
+import org.davidmason.zayf.rest.ServerProxyImpl;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
@@ -411,7 +412,7 @@ public class ZayfView extends JFrame
          {
             //TODO: if connected, disconnect (if SP can force disconnect)
             if (USE_DUMMY_SERVER)
-               serverProxy = new ServerProxy();
+               serverProxy = new ServerProxyImpl();
             //               serverProxy = new ServerProxy(new URL(ncf.getUrl()).toURI(), ncf.getUserName(), ncf.getApiKey());
             else
                serverProxy = new DummyServerProxy();
@@ -465,7 +466,7 @@ public class ZayfView extends JFrame
          //         serverProxy = new ServerProxy(uri, userName, apiKey);
          try
          {
-            serverProxy = new ServerProxy();
+            serverProxy = new ServerProxyImpl();
          }
          catch (URISyntaxException e)
          {

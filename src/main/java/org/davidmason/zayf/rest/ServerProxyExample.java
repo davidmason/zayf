@@ -42,7 +42,7 @@ public class ServerProxyExample
    {
       //ServerProxy sp = new DummyServerProxy();
       ServerProxy sp =
-            new ServerProxy(new URL("http://localhost:8080/zanata/").toURI(), "admin",
+            new ServerProxyImpl(new URL("http://localhost:8080/zanata/").toURI(), "admin",
                             "REDACTED");
 
       System.out.println("\nGetting project list");
