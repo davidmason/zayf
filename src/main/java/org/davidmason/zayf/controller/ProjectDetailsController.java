@@ -22,10 +22,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.view.ProjectDetailsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
-import org.davidmason.zayf.rest.ServerProxy;
 
 public class ProjectDetailsController
 {

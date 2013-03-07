@@ -19,25 +19,14 @@
 package org.davidmason.zayf.ui;
 
 //import org.apache.log4j.lf5.viewer.categoryexplorer.TreeModelAdapter; //TODO: wat?
-import org.zanata.common.ContentState;
-import org.zanata.common.LocaleId;
-import org.zanata.rest.dto.*;
-import org.zanata.rest.dto.resource.*;
-import org.davidmason.zayf.persistence.FileIO;
-import org.davidmason.zayf.rest.*;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -52,6 +41,16 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+
+import org.davidmason.zayf.persistence.FileIO;
+import org.davidmason.zayf.rest.DummyServerProxy;
+import org.davidmason.zayf.rest.ServerProxy;
+import org.zanata.common.LocaleId;
+import org.zanata.rest.dto.Project;
+import org.zanata.rest.dto.ProjectIteration;
+import org.zanata.rest.dto.resource.ResourceMeta;
+import org.zanata.rest.dto.resource.TextFlow;
+import org.zanata.rest.dto.resource.TextFlowTarget;
 
 /**
  * Swing UI for Zayf client

@@ -29,11 +29,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 
+import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.view.DocumentsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 import org.zanata.rest.dto.resource.ResourceMeta;
-import org.davidmason.zayf.rest.ServerProxy;
 
 /**
  * Responsible for fetching a list of documents for a project-version for display.

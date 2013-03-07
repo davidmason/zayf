@@ -28,9 +28,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
-import org.zanata.rest.dto.resource.TextFlowTarget;
 import org.zanata.common.ContentState;
 import org.zanata.common.LocaleId;
+import org.zanata.rest.dto.resource.TextFlowTarget;
 
 public class TextFlowTargetPanel extends JPanel
 {
