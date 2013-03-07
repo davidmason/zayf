@@ -74,7 +74,9 @@ use Maven 3.0.3 - other versions may work (no guarantees).
 
 Build and package distributable application in .zip and .tar.gz formats
 
-    $ mvn package
+```bash
+$ mvn package
+```
 
 To run Zayf, find the .tar.gz or .zip archive in target directory, untar/unzip
 somewhere, then run bin/zayf or bin/zayf.bat.
@@ -82,11 +84,15 @@ somewhere, then run bin/zayf or bin/zayf.bat.
 
 Build, package and install to local Maven repository
 
-    $ mvn install
+```bash
+$ mvn install
+```
 
 Run Zayf directly from Maven
 
-    $ mvn exec:java
+```bash
+$ mvn exec:java
+```
 
 
 
