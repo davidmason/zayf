@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.controller;
+package org.davidmason.zayf.controller.impl;
 
 import java.text.Collator;
 import java.util.Collections;
@@ -35,18 +35,21 @@ import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 import org.zanata.rest.dto.resource.ResourceMeta;
 
+import com.google.inject.Inject;
+
 /**
  * Responsible for fetching a list of documents for a project-version for display.
  * 
  * @author David Mason, dr.d.mason@gmail.com
  */
-public class DocumentsController
+class DocumentsController
 {
 
    private ServerProxy server;
    private DocumentsView<?> view;
 
-   public DocumentsController(DocumentsView<?> view)
+   @Inject
+   DocumentsController(DocumentsView<?> view)
    {
       this.view = view;
    }

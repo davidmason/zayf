@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.view.impl;
+package org.davidmason.zayf.view.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -36,7 +36,7 @@ import org.zanata.rest.dto.resource.ResourceMeta;
  * @author David Mason, dr.d.mason@gmail.com
  * 
  */
-public class DocumentsViewImpl extends JFrame implements DocumentsView<Component>
+class SwingDocumentsView extends JFrame implements DocumentsView<Component>
 {
 
    private static final long serialVersionUID = 1L;
@@ -46,7 +46,7 @@ public class DocumentsViewImpl extends JFrame implements DocumentsView<Component
    private JTree documentsTree;
    private JScrollPane treeView;
 
-   public DocumentsViewImpl()
+   public SwingDocumentsView()
    {
       buildGui();
    }

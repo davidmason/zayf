@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.controller;
+package org.davidmason.zayf.controller.impl;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -29,11 +29,14 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
 import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
+
+import com.google.inject.Inject;
 
 /**
  * Responsible for fetching a list of projects for display, and responding to user selection of a
@@ -42,7 +45,7 @@ import org.zanata.rest.dto.ProjectIteration;
  * @author David Mason, dr.d.mason@gmail.com
  * 
  */
-public class ProjectTreeController
+class ProjectTreeController
 {
 
    private ProjectTreeView<?> view;
@@ -52,7 +55,8 @@ public class ProjectTreeController
    // TODO use interface for this, and change to action listener pattern
    private ProjectDetailsController projectDetailsDisplayer;
 
-   public ProjectTreeController(ProjectTreeView<?> view,
+   @Inject
+   ProjectTreeController(ProjectTreeView<?> view,
                                 ProjectDetailsController projectDetailsController)
    {
       this.view = view;
@@ -70,8 +74,12 @@ public class ProjectTreeController
          @Override
          public void valueChanged(TreeSelectionEvent e)
          {
-            DefaultMutableTreeNode node =
-                  (DefaultMutableTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();
+            DefaultMutableTreeNode node = null;
+            TreePath newLeadSelectionPath = e.getNewLeadSelectionPath();
+            if (newLeadSelectionPath != null)
+            {
+               node = (DefaultMutableTreeNode) newLeadSelectionPath.getLastPathComponent();
+            }
             if (node == null)
             {
                projectDetailsDisplayer.loadProject(null, null);

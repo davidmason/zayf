@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.controller;
+package org.davidmason.zayf.controller.impl;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,6 +25,8 @@ import org.davidmason.zayf.view.VersionDetailsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 
+import com.google.inject.Inject;
+
 /**
  * Responsible for fetching statistics for a version for display, and responding to various user
  * input at the version level.
@@ -32,7 +34,7 @@ import org.zanata.rest.dto.ProjectIteration;
  * @author David Mason, dr.d.mason@gmail.com
  * 
  */
-public class VersionDetailsController
+class VersionDetailsController
 {
 
    private VersionDetailsView<?> view;
@@ -41,7 +43,8 @@ public class VersionDetailsController
    private ProjectIteration version;
    private Project project;
 
-   public VersionDetailsController(VersionDetailsView<?> view, DocumentsController docsControl)
+   @Inject
+   VersionDetailsController(VersionDetailsView<?> view, DocumentsController docsControl)
    {
       this.view = view;
       this.docsController = docsControl;

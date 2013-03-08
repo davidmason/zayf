@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.controller;
+package org.davidmason.zayf.controller.impl;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,10 +25,13 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 import org.davidmason.zayf.config.ConfigLoader;
+import org.davidmason.zayf.controller.ServerConfigLoader;
 import org.davidmason.zayf.model.ServerInfo;
 import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.rest.ServerProxyImpl;
 import org.davidmason.zayf.view.ServerSelectView;
+
+import com.google.inject.Inject;
 
 /**
  * Responsible for loading server info from configuration and responding to user selection of a
@@ -37,14 +40,15 @@ import org.davidmason.zayf.view.ServerSelectView;
  * @author David Mason, dr.d.mason@gmail.com
  * 
  */
-public class ServerSelectController
+class ServerSelectController implements ServerConfigLoader
 {
 
    private ServerSelectView<?> view;
    private ProjectTreeController projectTreeController;
    private DocumentsController docsController;
 
-   public ServerSelectController(ServerSelectView<?> sSView,
+   @Inject
+   ServerSelectController(ServerSelectView<?> sSView,
                                  ProjectTreeController projectTreeController,
                                  DocumentsController docsController)
    {

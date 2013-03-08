@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.view.impl;
+package org.davidmason.zayf.view.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -35,7 +35,7 @@ import org.davidmason.zayf.view.ProjectTreeView;
  * @author David Mason, dr.d.mason@gmail.com
  * 
  */
-public class ProjectTreeViewImpl extends JPanel implements ProjectTreeView<Component>
+class SwingProjectTreeView extends JPanel implements ProjectTreeView<Component>
 {
 
    private static final long serialVersionUID = 1L;
@@ -43,7 +43,7 @@ public class ProjectTreeViewImpl extends JPanel implements ProjectTreeView<Compo
    private JScrollPane treeView;
    private ProjectsTree projectsTree;
 
-   public ProjectTreeViewImpl()
+   public SwingProjectTreeView()
    {
       buildGui();
    }

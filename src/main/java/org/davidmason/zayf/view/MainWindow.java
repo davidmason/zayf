@@ -24,6 +24,8 @@ import java.awt.Component;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 
+import com.google.inject.Inject;
+
 /**
  * Main window of application. This class is responsible for laying out the
  * panels for server, project and version selection.
@@ -48,13 +50,16 @@ public class MainWindow extends JFrame
 
    private JSplitPane projectPane, projectDetailsPane;
 
-   public MainWindow(Component serverSelect, Component projectTreeView,
-                     Component projectDetailsView, Component versionDetailsView)
+   @Inject
+   public MainWindow(ServerSelectView<Component> serverSelect,
+                     ProjectTreeView<Component> projectTreeView,
+                     ProjectDetailsView<Component> projectDetailsView,
+                     VersionDetailsView<Component> versionDetailsView)
    {
-      this.serverSelect = serverSelect;
-      this.projectTree = projectTreeView;
-      this.projectDetailsView = projectDetailsView;
-      this.versionDetailsView = versionDetailsView;
+      this.serverSelect = serverSelect.asWidget();
+      this.projectTree = projectTreeView.asWidget();
+      this.projectDetailsView = projectDetailsView.asWidget();
+      this.versionDetailsView = versionDetailsView.asWidget();
 
       //      this.docsView = documentsView;
 

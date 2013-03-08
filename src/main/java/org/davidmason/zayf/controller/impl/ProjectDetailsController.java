@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.controller;
+package org.davidmason.zayf.controller.impl;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,6 +27,8 @@ import org.davidmason.zayf.view.ProjectDetailsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 
+import com.google.inject.Inject;
+
 /**
  * Responsible for fetching version info for a project, sending this for display, and responding to
  * selection of a version.
@@ -34,7 +36,7 @@ import org.zanata.rest.dto.ProjectIteration;
  * @author David Mason, dr.d.mason@gmail.com
  * 
  */
-public class ProjectDetailsController
+class ProjectDetailsController
 {
 
    private ProjectDetailsView<?> view;
@@ -42,7 +44,8 @@ public class ProjectDetailsController
    private List<ProjectIteration> versionList;
    private Project project;
 
-   public ProjectDetailsController(ProjectDetailsView<?> view,
+   @Inject
+   ProjectDetailsController(ProjectDetailsView<?> view,
                                    VersionDetailsController versionDetailsController)
    {
       this.view = view;
@@ -90,8 +93,15 @@ public class ProjectDetailsController
       this.project = project;
       view.showProjectDetails(project);
 
-      versionList = server.getVersionList(project.getId());
-      view.showVersions(versionList);
+      if (project == null)
+      {
+         view.showVersions(null);
+      }
+      else
+      {
+         versionList = server.getVersionList(project.getId());
+         view.showVersions(versionList);
+      }
 
       // clear version display to avoid confusion
       versionDisplayer.showVersion(project, null);

@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.view.impl;
+package org.davidmason.zayf.view.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -39,7 +39,7 @@ import org.davidmason.zayf.view.ServerSelectView;
  * @author David Mason, dr.d.mason@gmail.com
  * 
  */
-public class ServerSelectViewImpl extends JPanel implements ServerSelectView<Component>
+class SwingServerSelectView extends JPanel implements ServerSelectView<Component>
 {
 
    private static final String FINDING_SERVERS_IN_CONFIG_FILE = "Finding servers in config file...";
@@ -50,7 +50,7 @@ public class ServerSelectViewImpl extends JPanel implements ServerSelectView<Com
    private JComboBox serverCombo;
    private JButton loadProjectsButton;
 
-   public ServerSelectViewImpl()
+   public SwingServerSelectView()
    {
       buildGui();
    }

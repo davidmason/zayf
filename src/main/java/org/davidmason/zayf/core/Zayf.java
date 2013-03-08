@@ -19,33 +19,22 @@
 package org.davidmason.zayf.core;
 
 import java.awt.AWTException;
-import java.awt.Component;
 import java.awt.SystemTray;
 import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import org.davidmason.zayf.controller.DocumentsController;
-import org.davidmason.zayf.controller.ProjectDetailsController;
-import org.davidmason.zayf.controller.ProjectTreeController;
-import org.davidmason.zayf.controller.ServerSelectController;
-import org.davidmason.zayf.controller.VersionDetailsController;
-import org.davidmason.zayf.view.DocumentsView;
+import org.davidmason.zayf.controller.ServerConfigLoader;
+import org.davidmason.zayf.controller.impl.ControllerModule;
 import org.davidmason.zayf.view.MainWindow;
-import org.davidmason.zayf.view.ProjectDetailsView;
-import org.davidmason.zayf.view.ProjectTreeView;
-import org.davidmason.zayf.view.ServerSelectView;
-import org.davidmason.zayf.view.VersionDetailsView;
 import org.davidmason.zayf.view.ZayfTrayIcon;
-import org.davidmason.zayf.view.impl.DocumentsViewImpl;
-import org.davidmason.zayf.view.impl.ProjectDetailsViewImpl;
-import org.davidmason.zayf.view.impl.ProjectTreeViewImpl;
-import org.davidmason.zayf.view.impl.ServerSelectViewImpl;
-import org.davidmason.zayf.view.impl.VersionDetailsViewImpl;
+import org.davidmason.zayf.view.swing.SwingViewModule;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 /**
- * Zayf entry point, currently responsible for wiring the application
- * (until an appropriate framework is employed)
+ * Zayf entry point.
  */
 public class Zayf
 {
@@ -66,32 +55,21 @@ public class Zayf
    // TODO move this to its own class
    private static void runApplication()
    {
+      final ZayfTrayIcon icon = makeTrayIcon();
 
-      // documents window
-      DocumentsView<Component> docsView = new DocumentsViewImpl();
-      DocumentsController docsControl = new DocumentsController(docsView);
+      Injector injector = Guice.createInjector(new SwingViewModule(), new ControllerModule());
+      final MainWindow mainWindow2 = injector.getInstance(MainWindow.class);
 
-      // main window
-      VersionDetailsView<Component> verDetailsView = new VersionDetailsViewImpl();
-      VersionDetailsController verDetailsControl =
-            new VersionDetailsController(verDetailsView, docsControl);
+      addIconActionListener(mainWindow2, icon);
 
-      ProjectDetailsView<Component> projDetailsView = new ProjectDetailsViewImpl();
-      ProjectDetailsController projDetailsControl =
-            new ProjectDetailsController(projDetailsView, verDetailsControl);
+      final ServerConfigLoader configLoader = injector.getInstance(ServerConfigLoader.class);
 
-      ProjectTreeView<Component> projTreeView = new ProjectTreeViewImpl();
-      ProjectTreeController projTreeControl =
-            new ProjectTreeController(projTreeView, projDetailsControl);
+      // TODO may want to make this step manual, or sometimes manual
+      configLoader.loadServersFromConfig();
+   }
 
-      ServerSelectView<Component> serverSelectView = new ServerSelectViewImpl();
-      ServerSelectController serverControl =
-            new ServerSelectController(serverSelectView, projTreeControl, docsControl);
-
-      final MainWindow mainWindow =
-            new MainWindow(serverSelectView.asWidget(), projTreeView.asWidget(),
-                           projDetailsView.asWidget(), verDetailsView.asWidget());
-
+   private static ZayfTrayIcon makeTrayIcon()
+   {
       if (SystemTray.isSupported())
       {
          final ZayfTrayIcon icon = new ZayfTrayIcon();
@@ -114,22 +92,7 @@ public class Zayf
                System.exit(0);
             }
          });
-         icon.addIconActionListener(new ActionListener()
-         {
-
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-               boolean show = !mainWindow.isVisible();
-               if (!show)
-               {
-                  icon.displayMessage("Zayf is minimized",
-                                      "Double-click to restore. Right-click and select 'exit' to close",
-                                      MessageType.INFO);
-               }
-               mainWindow.setVisible(show);
-            }
-         });
+         return icon;
       }
       else
       {
@@ -137,9 +100,27 @@ public class Zayf
          // make default behaviour close on [X], allow config to change this, and add an application
          // menu with exit option.
          System.out.println("system tray not supported");
+         return null;
       }
+   }
 
-      // TODO may want to make this step manual, or sometimes manual.
-      serverControl.loadServersFromConfig();
+   private static void addIconActionListener(final MainWindow mainWindow, final ZayfTrayIcon icon)
+   {
+      icon.addIconActionListener(new ActionListener()
+      {
+
+         @Override
+         public void actionPerformed(ActionEvent e)
+         {
+            boolean show = !mainWindow.isVisible();
+            if (!show)
+            {
+               icon.displayMessage("Zayf is minimized",
+                                   "Double-click to restore. Right-click and select 'exit' to close",
+                                   MessageType.INFO);
+            }
+            mainWindow.setVisible(show);
+         }
+      });
    }
 }

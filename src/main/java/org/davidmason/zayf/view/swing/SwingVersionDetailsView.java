@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.view.impl;
+package org.davidmason.zayf.view.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -35,7 +35,7 @@ import org.zanata.rest.dto.ProjectIteration;
  * @author David Mason, dr.d.mason@gmail.com
  *
  */
-public class VersionDetailsViewImpl extends JPanel implements VersionDetailsView<Component>
+class SwingVersionDetailsView extends JPanel implements VersionDetailsView<Component>
 {
 
    private static final long serialVersionUID = 1L;
@@ -54,7 +54,7 @@ public class VersionDetailsViewImpl extends JPanel implements VersionDetailsView
 
    private boolean showingVersion;
 
-   public VersionDetailsViewImpl()
+   public SwingVersionDetailsView()
    {
       buildGui();
    }
