@@ -18,112 +18,22 @@
  */
 package org.davidmason.zayf.view;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-
-import org.zanata.common.EntityStatus;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 
 /**
- * Responsible for displaying basic details and a list of versions for a
- * project.
+ * View interface for displaying basic project details and a list of versions under the project.
  * 
  * @author David Mason, dr.d.mason@gmail.com
  * 
+ * @param <WidgetType>
+ *           return type for {{@link #asWidget()}
  */
-public class ProjectDetailsView extends JPanel
+public interface ProjectDetailsView<WidgetType> extends WidgetView<WidgetType>
 {
-
-   private static final long serialVersionUID = 1L;
-
-   private static final String NO_PROJECT_SELECTED = "No project selected";
-   private static final String NO_VERSIONS = "No versions to display";
-   private static final String ID_FIELD_NAME = "Project ID: ";
-   private static final String NAME_FIELD_NAME = "Name: ";
-   private static final String DESC_FIELD_NAME = "Desc: ";
-
-   private JSplitPane projectPanel;
-   private JPanel projectDetailPanel, noProjectPanel, versionPanel, noVersionsPanel;
-
-   private JLabel noProjectLabel, noVersionLabel, idLabel, nameLabel, descLabel;
-
-   private boolean showingProject;
-   private boolean showingVersions;
-
-   private ActionListener versionSelectedListener;
-
-   public ProjectDetailsView()
-   {
-      buildGui();
-   }
-
-   private void buildGui()
-   {
-      setLayout(new BorderLayout());
-      buildProjectPanel();
-      buildNoProjectPanel();
-
-      add(noProjectPanel, BorderLayout.CENTER);
-      showingProject = false;
-   }
-
-   private void buildProjectPanel()
-   {
-      buildVersionPanel();
-      buildNoVersionPanel();
-      buildProjectDetailPanel();
-
-      projectPanel =
-            new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, projectDetailPanel, noVersionsPanel);
-      projectPanel.setDividerLocation(80);
-      projectPanel.setDividerSize(3);
-      projectPanel.setEnabled(true);
-
-      showingVersions = false;
-   }
-
-   private void buildProjectDetailPanel()
-   {
-      projectDetailPanel = new JPanel();
-
-      idLabel = new JLabel(ID_FIELD_NAME);
-      nameLabel = new JLabel(NAME_FIELD_NAME);
-      descLabel = new JLabel(DESC_FIELD_NAME);
-
-      projectDetailPanel.add(idLabel);
-      projectDetailPanel.add(nameLabel);
-      projectDetailPanel.add(descLabel);
-   }
-
-   private void buildNoProjectPanel()
-   {
-      noProjectPanel = new JPanel();
-      noProjectLabel = new JLabel(NO_PROJECT_SELECTED);
-      noProjectPanel.add(noProjectLabel);
-   }
-
-   private void buildVersionPanel()
-   {
-      // TODO use buttons for each version, flowlayout should be fine
-      versionPanel = new JPanel();
-      // TODO adjust horizontal and vertical padding
-   }
-
-   private void buildNoVersionPanel()
-   {
-      noVersionsPanel = new JPanel();
-      noVersionLabel = new JLabel(NO_VERSIONS);
-      noVersionsPanel.add(noVersionLabel);
-   }
 
    /**
     * Display id, name and description for a project.
@@ -131,90 +41,18 @@ public class ProjectDetailsView extends JPanel
     * @param project
     *           for which to show details, or null to show no project.
     */
-   public void showProjectDetails(Project project)
-   {
-      if (project == null)
-      {
-         if (showingProject)
-         {
-            remove(projectPanel);
-            add(noProjectPanel);
-            showingProject = false;
-            validate();
-         }
-         return;
-      }
+   public void showProjectDetails(Project project);
 
-      idLabel.setText(ID_FIELD_NAME + project.getId());
-      nameLabel.setText(NAME_FIELD_NAME + project.getName());
-      if (project.getDescription() == null)
-      {
-         descLabel.setText("");
-      }
-      else
-      {
-         descLabel.setText(DESC_FIELD_NAME + project.getDescription());
-      }
+   /**
+    * Display a list of versions from which a user can select a version.
+    * 
+    * @see #setVersionSelectedListener(ActionListener)
+    */
+   public void showVersions(List<ProjectIteration> versions);
 
-      remove(noProjectPanel);
-      add(projectPanel);
-      showingProject = true;
-      validate();
-   }
+   /**
+    * Set listener for user selection of a version.
+    */
+   public void setVersionSelectedListener(ActionListener listener);
 
-   public void showVersions(List<ProjectIteration> versions)
-   {
-      // clear iterations from display
-      versionPanel.removeAll();
-
-      if (versions == null || versions.isEmpty())
-      {
-         if (showingVersions)
-         {
-            projectPanel.remove(versionPanel);
-            projectPanel.add(noVersionsPanel, JSplitPane.BOTTOM);
-            showingVersions = false;
-            revalidate();
-         }
-         return;
-      }
-      // show each version
-      for (ProjectIteration version : versions)
-      {
-         if (version.getStatus() != EntityStatus.OBSOLETE)
-         {
-            versionPanel.add(buildVersionTile(version));
-         }
-      }
-      if (!showingVersions)
-      {
-         projectPanel.remove(noVersionsPanel);
-         projectPanel.add(versionPanel, JSplitPane.BOTTOM);
-         showingVersions = true;
-      }
-      revalidate();
-   }
-
-   private Component buildVersionTile(ProjectIteration version)
-   {
-      JButton tile = new JButton();
-      if (version.getStatus() == EntityStatus.READONLY)
-      {
-         tile.setBackground(Color.PINK);
-         tile.setText(version.getId() + " (read only)");
-      }
-      else
-      {
-         tile.setText(version.getId());
-      }
-      // version ID will be used by project controller to look up the version to display.
-      tile.setActionCommand(version.getId());
-      tile.addActionListener(versionSelectedListener);
-      return tile;
-   }
-
-   public void setVersionSelectedListener(ActionListener listener)
-   {
-      this.versionSelectedListener = listener;
-   }
 }

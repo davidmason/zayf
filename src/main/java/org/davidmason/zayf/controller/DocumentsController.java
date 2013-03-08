@@ -44,9 +44,9 @@ public class DocumentsController
 {
 
    private ServerProxy server;
-   private DocumentsView view;
+   private DocumentsView<?> view;
 
-   public DocumentsController(DocumentsView view)
+   public DocumentsController(DocumentsView<?> view)
    {
       this.view = view;
    }

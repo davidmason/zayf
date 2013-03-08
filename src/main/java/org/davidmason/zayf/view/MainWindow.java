@@ -19,6 +19,7 @@
 package org.davidmason.zayf.view;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
@@ -40,15 +41,15 @@ public class MainWindow extends JFrame
    private static final int WINDOW_HEIGHT = 768;
    private static final int WINDOW_WIDTH = 1024;
 
-   private ServerSelectView serverSelect;
-   private ProjectTreeView projectTree;
-   private ProjectDetailsView projectDetailsView;
-   private VersionDetailsView versionDetailsView;
+   private Component serverSelect;
+   private Component projectTree;
+   private Component projectDetailsView;
+   private Component versionDetailsView;
 
    private JSplitPane projectPane, projectDetailsPane;
 
-   public MainWindow(ServerSelectView serverSelect, ProjectTreeView projectTreeView,
-                     ProjectDetailsView projectDetailsView, VersionDetailsView versionDetailsView)
+   public MainWindow(Component serverSelect, Component projectTreeView,
+                     Component projectDetailsView, Component versionDetailsView)
    {
       this.serverSelect = serverSelect;
       this.projectTree = projectTreeView;

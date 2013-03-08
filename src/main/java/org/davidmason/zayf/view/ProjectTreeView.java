@@ -18,51 +18,28 @@
  */
 package org.davidmason.zayf.view;
 
-import java.awt.BorderLayout;
-
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreeModel;
 
-import org.davidmason.zayf.ui.ProjectsTree;
-
-public class ProjectTreeView extends JPanel
+/**
+ * View interface for displaying a list of projects.
+ * 
+ * @author David Mason, dr.d.mason@gmail.com
+ * 
+ * @param <WidgetType>
+ *           return type for {{@link #asWidget()}
+ */
+public interface ProjectTreeView<WidgetType> extends WidgetView<WidgetType>
 {
 
-   private static final long serialVersionUID = 1L;
+   /**
+    * Display the given model.
+    */
+   public void showProjectTree(TreeModel model);
 
-   private JScrollPane treeView;
-   private ProjectsTree projectsTree;
+   /**
+    * Add a listener for selection of a project from the list.
+    */
+   public void addSelectionListener(TreeSelectionListener listener);
 
-   public ProjectTreeView()
-   {
-      buildGui();
-   }
-
-   private void buildGui()
-   {
-      setLayout(new BorderLayout());
-      //      rootNode = new DefaultMutableTreeNode(controller.getServerUrl());
-      //      treeModel = new DefaultTreeModel(rootNode);
-      // TODO hide root node?
-
-      // Note: this does not show anything initially
-      //       instead, it just waits until instructed by the controller
-      //       to load up a tree
-      projectsTree = new ProjectsTree();
-      treeView = new JScrollPane(projectsTree);
-
-      add(treeView, BorderLayout.CENTER);
-   }
-
-   public void showProjectTree(TreeModel model)
-   {
-      projectsTree.setModel(model);
-   }
-
-   public void addSelectionListener(TreeSelectionListener listener)
-   {
-      projectsTree.addTreeSelectionListener(listener);
-   }
 }

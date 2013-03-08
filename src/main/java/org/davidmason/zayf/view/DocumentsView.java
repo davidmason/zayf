@@ -18,94 +18,30 @@
  */
 package org.davidmason.zayf.view;
 
-import java.awt.BorderLayout;
-
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 
-import org.zanata.rest.dto.resource.ResourceMeta;
-
-public class DocumentsView extends JFrame
+/**
+ * View interface for displaying a tree of documents.
+ * 
+ * @author David Mason, dr.d.mason@gmail.com
+ * 
+ * @param <WidgetType>
+ *           return type for {{@link #asWidget()}
+ */
+public interface DocumentsView<WidgetType> extends WidgetView<WidgetType>
 {
 
-   private static final long serialVersionUID = 1L;
+   /**
+    * Set title for document display area
+    */
+   public void setTitle(String title);
 
-   private static final String TITLE_PREFIX = "Zayf - documents - ";
-
-   private JTree documentsTree;
-   private JScrollPane treeView;
-
-   public DocumentsView()
-   {
-      buildGui();
-   }
-
-   private void buildGui()
-   {
-      setLayout(new BorderLayout());
-      setTitle(TITLE_PREFIX);
-      setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-      setBounds(0, 0, 480, 640);
-      // TODO position relative to other window
-      setLocationRelativeTo(null);
-
-      documentsTree = new JTree()
-      {
-
-         @Override
-         public String convertValueToText(Object value, boolean selected, boolean expanded,
-                                          boolean leaf, int row, boolean hasFocus)
-         {
-            if (((DefaultMutableTreeNode) value).getUserObject() instanceof ResourceMeta)
-            {
-               String docPathAndName =
-                     ((ResourceMeta) ((DefaultMutableTreeNode) value).getUserObject()).getName();
-               return getEndOfPath(docPathAndName);
-            }
-
-            return value.toString();
-         }
-      };
-
-      documentsTree.setRootVisible(true);
-      documentsTree.putClientProperty("JTree.lineStyle", "Angled");
-
-      treeView = new JScrollPane(documentsTree);
-      add(treeView, BorderLayout.CENTER);
-   }
-
-   @Override
-   public void setTitle(String title)
-   {
-      super.setTitle(TITLE_PREFIX + title);
-   }
-
-   public void showDocumentsTree(TreeModel model)
-   {
-      documentsTree.setModel(model);
-      // expand all nodes (for demonstration purposes)
-      for (int row = 0; row < documentsTree.getRowCount(); row++)
-      {
-         documentsTree.expandRow(row);
-      }
-      setVisible(true);
-   }
+   /**
+    * Display a given tree of documents.
+    */
+   public void showDocumentsTree(TreeModel model);
 
    // TODO put this in a util class, or use existing util class if present
-   public String getEndOfPath(String path)
-   {
-      int finalSlash = path.lastIndexOf("/");
-      if (finalSlash == -1)
-      {
-         return path;
-      }
-      if (finalSlash != path.length() - 1)
-      {
-         return path.substring(finalSlash + 1);
-      }
-      throw new RuntimeException("Slash on end of path: " + path);
-   }
+   public String getEndOfPath(String path);
+
 }

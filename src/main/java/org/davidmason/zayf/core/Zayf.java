@@ -19,6 +19,7 @@
 package org.davidmason.zayf.core;
 
 import java.awt.AWTException;
+import java.awt.Component;
 import java.awt.SystemTray;
 import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
@@ -36,6 +37,11 @@ import org.davidmason.zayf.view.ProjectTreeView;
 import org.davidmason.zayf.view.ServerSelectView;
 import org.davidmason.zayf.view.VersionDetailsView;
 import org.davidmason.zayf.view.ZayfTrayIcon;
+import org.davidmason.zayf.view.impl.DocumentsViewImpl;
+import org.davidmason.zayf.view.impl.ProjectDetailsViewImpl;
+import org.davidmason.zayf.view.impl.ProjectTreeViewImpl;
+import org.davidmason.zayf.view.impl.ServerSelectViewImpl;
+import org.davidmason.zayf.view.impl.VersionDetailsViewImpl;
 
 /**
  * Zayf entry point, currently responsible for wiring the application
@@ -62,28 +68,29 @@ public class Zayf
    {
 
       // documents window
-      DocumentsView docsView = new DocumentsView();
+      DocumentsView<Component> docsView = new DocumentsViewImpl();
       DocumentsController docsControl = new DocumentsController(docsView);
 
       // main window
-      VersionDetailsView verDetailsView = new VersionDetailsView();
+      VersionDetailsView<Component> verDetailsView = new VersionDetailsViewImpl();
       VersionDetailsController verDetailsControl =
             new VersionDetailsController(verDetailsView, docsControl);
 
-      ProjectDetailsView projDetailsView = new ProjectDetailsView();
+      ProjectDetailsView<Component> projDetailsView = new ProjectDetailsViewImpl();
       ProjectDetailsController projDetailsControl =
             new ProjectDetailsController(projDetailsView, verDetailsControl);
 
-      ProjectTreeView projTreeView = new ProjectTreeView();
+      ProjectTreeView<Component> projTreeView = new ProjectTreeViewImpl();
       ProjectTreeController projTreeControl =
             new ProjectTreeController(projTreeView, projDetailsControl);
 
+      ServerSelectView<Component> serverSelectView = new ServerSelectViewImpl();
       ServerSelectController serverControl =
-            new ServerSelectController(projTreeControl, docsControl);
-      ServerSelectView serverSelectView = new ServerSelectView(serverControl);
+            new ServerSelectController(serverSelectView, projTreeControl, docsControl);
 
       final MainWindow mainWindow =
-            new MainWindow(serverSelectView, projTreeView, projDetailsView, verDetailsView);
+            new MainWindow(serverSelectView.asWidget(), projTreeView.asWidget(),
+                           projDetailsView.asWidget(), verDetailsView.asWidget());
 
       if (SystemTray.isSupported())
       {
@@ -126,8 +133,13 @@ public class Zayf
       }
       else
       {
+         // FIXME application cannot be closed without the above in its current form
+         // make default behaviour close on [X], allow config to change this, and add an application
+         // menu with exit option.
          System.out.println("system tray not supported");
       }
 
+      // TODO may want to make this step manual, or sometimes manual.
+      serverControl.loadServersFromConfig();
    }
 }

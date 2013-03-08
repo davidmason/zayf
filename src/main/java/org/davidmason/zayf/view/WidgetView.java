@@ -18,34 +18,22 @@
  */
 package org.davidmason.zayf.view;
 
-import java.awt.event.ActionListener;
-
-import org.zanata.rest.dto.ProjectIteration;
-
 /**
- * View interface for displaying version details and control buttons.
+ * Superinterface for views that are implemented using underlying widgets. Provides an
+ * {@link #asWidget()} method to retrieve a strongly typed widget without the need for casting or
+ * reflection.
  * 
  * @author David Mason, dr.d.mason@gmail.com
  * 
  * @param <WidgetType>
- *           return type for {{@link #asWidget()}
+ *           the underlying type of this widget
  */
-public interface VersionDetailsView<WidgetType> extends WidgetView<WidgetType>
+public interface WidgetView<WidgetType>
 {
 
    /**
-    * Show basic details for a given version.
-    * 
-    * @param version
-    *           for which to display details.
+    * @return this view as a widget for use with the underlying framework.
     */
-   public void displayVersion(ProjectIteration version);
+   WidgetType asWidget();
 
-   /**
-    * Register a listener for a user input to display the document list for the given version.
-    * 
-    * @param listener
-    *           to register.
-    */
-   public void setShowDocsListener(ActionListener listener);
 }

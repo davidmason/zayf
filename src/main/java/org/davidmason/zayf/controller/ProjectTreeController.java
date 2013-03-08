@@ -35,17 +35,24 @@ import org.davidmason.zayf.view.ProjectTreeView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 
+/**
+ * Responsible for fetching a list of projects for display, and responding to user selection of a
+ * project.
+ * 
+ * @author David Mason, dr.d.mason@gmail.com
+ * 
+ */
 public class ProjectTreeController
 {
 
-   private ProjectTreeView view;
+   private ProjectTreeView<?> view;
    // private ServerInfo currentServer;
    private ServerProxy server;
 
    // TODO use interface for this, and change to action listener pattern
    private ProjectDetailsController projectDetailsDisplayer;
 
-   public ProjectTreeController(ProjectTreeView view,
+   public ProjectTreeController(ProjectTreeView<?> view,
                                 ProjectDetailsController projectDetailsController)
    {
       this.view = view;

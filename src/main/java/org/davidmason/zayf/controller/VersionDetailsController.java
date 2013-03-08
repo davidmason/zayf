@@ -25,16 +25,23 @@ import org.davidmason.zayf.view.VersionDetailsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 
+/**
+ * Responsible for fetching statistics for a version for display, and responding to various user
+ * input at the version level.
+ * 
+ * @author David Mason, dr.d.mason@gmail.com
+ * 
+ */
 public class VersionDetailsController
 {
 
-   private VersionDetailsView view;
+   private VersionDetailsView<?> view;
    private DocumentsController docsController;
 
    private ProjectIteration version;
    private Project project;
 
-   public VersionDetailsController(VersionDetailsView view, DocumentsController docsControl)
+   public VersionDetailsController(VersionDetailsView<?> view, DocumentsController docsControl)
    {
       this.view = view;
       this.docsController = docsControl;

@@ -27,15 +27,22 @@ import org.davidmason.zayf.view.ProjectDetailsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 
+/**
+ * Responsible for fetching version info for a project, sending this for display, and responding to
+ * selection of a version.
+ * 
+ * @author David Mason, dr.d.mason@gmail.com
+ * 
+ */
 public class ProjectDetailsController
 {
 
-   private ProjectDetailsView view;
+   private ProjectDetailsView<?> view;
    private final VersionDetailsController versionDisplayer;
    private List<ProjectIteration> versionList;
    private Project project;
 
-   public ProjectDetailsController(ProjectDetailsView view,
+   public ProjectDetailsController(ProjectDetailsView<?> view,
                                    VersionDetailsController versionDetailsController)
    {
       this.view = view;

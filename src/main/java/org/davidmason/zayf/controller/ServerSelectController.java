@@ -18,6 +18,8 @@
  */
 package org.davidmason.zayf.controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -26,27 +28,55 @@ import org.davidmason.zayf.config.ConfigLoader;
 import org.davidmason.zayf.model.ServerInfo;
 import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.rest.ServerProxyImpl;
+import org.davidmason.zayf.view.ServerSelectView;
 
+/**
+ * Responsible for loading server info from configuration and responding to user selection of a
+ * server.
+ * 
+ * @author David Mason, dr.d.mason@gmail.com
+ * 
+ */
 public class ServerSelectController
 {
 
+   private ServerSelectView<?> view;
    private ProjectTreeController projectTreeController;
    private DocumentsController docsController;
 
-   public ServerSelectController(ProjectTreeController projectTreeController,
+   public ServerSelectController(ServerSelectView<?> sSView,
+                                 ProjectTreeController projectTreeController,
                                  DocumentsController docsController)
    {
+      this.view = sSView;
       this.projectTreeController = projectTreeController;
       this.docsController = docsController;
+
+      this.view.addLoadProjectListener(new ActionListener()
+      {
+
+         @Override
+         public void actionPerformed(ActionEvent e)
+         {
+            ServerInfo info = view.getSelectedServerInfo();
+            updateServerAndLoadProjects(info);
+         }
+      });
    }
 
-   public List<ServerInfo> getServerInfo()
+   public void loadServersFromConfig()
+   {
+      this.view.showServers(getServerInfo());
+   }
+
+   private List<ServerInfo> getServerInfo()
    {
       ConfigLoader loader = new ConfigLoader();
       return loader.getServerInfo();
    }
 
-   public void buttonPressViewProjects(ServerInfo info)
+   // FIXME should have a single server proxy reference for all components
+   private void updateServerAndLoadProjects(ServerInfo info)
    {
       URI uri;
       try

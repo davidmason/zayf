@@ -18,108 +18,37 @@
  */
 package org.davidmason.zayf.view;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-
-import org.davidmason.zayf.controller.ServerSelectController;
 import org.davidmason.zayf.model.ServerInfo;
 
 /**
- * View for selection of a Zanata server
+ * View interface for displaying a list of servers for user selection.
  * 
  * @author David Mason, dr.d.mason@gmail.com
  * 
+ * @param <WidgetType>
+ *           return type for {{@link #asWidget()}
  */
-public class ServerSelectView extends JPanel
+public interface ServerSelectView<WidgetType> extends WidgetView<WidgetType>
 {
 
-   private static final String FINDING_SERVERS_IN_CONFIG_FILE = "Finding servers in config file...";
+   /**
+    * Add listener for user indicating that the project list for a server should be shown.
+    */
+   void addLoadProjectListener(ActionListener listener);
 
-   private static final long serialVersionUID = 1L;
+   /**
+    * Display a list of servers from which user can choose.
+    * 
+    * @param servers
+    */
+   void showServers(List<ServerInfo> servers);
 
-   private ServerSelectController controller;
-
-   private JLabel statusLabel;
-   private JComboBox serverCombo;
-   private JButton loadProjectsButton;
-
-   public ServerSelectView(ServerSelectController serverController)
-   {
-      this.controller = serverController;
-      buildGui();
-      // TODO make a button trigger this?
-      loadServersIntoDropdown();
-   }
-
-   private void buildGui()
-   {
-      setLayout(new BorderLayout());
-
-      statusLabel = new JLabel(FINDING_SERVERS_IN_CONFIG_FILE);
-      createServerCombo();
-      createLoadProjectsButton();
-
-      add(statusLabel, BorderLayout.NORTH);
-      add(serverCombo, BorderLayout.CENTER);
-      add(loadProjectsButton, BorderLayout.EAST);
-
-      // TODO ability to select different config files, and change default config
-
-      //      setVisible(true);
-   }
-
-   private void createServerCombo()
-   {
-      serverCombo = new JComboBox();
-      serverCombo.setRenderer(new DefaultListCellRenderer()
-      {
-
-         private static final long serialVersionUID = 1L;
-
-         @Override
-         public Component getListCellRendererComponent(JList list,
-                                                       Object value, int index, boolean isSelected,
-                                                       boolean cellHasFocus)
-         {
-            ServerInfo serverInfo = (ServerInfo) value;
-            value = serverInfo.getUserName() + " | " + serverInfo.getServerUrl();
-            return super.getListCellRendererComponent(list, value, index, isSelected,
-                                                      cellHasFocus);
-         }
-      });
-   }
-
-   private void createLoadProjectsButton()
-   {
-      loadProjectsButton = new JButton();
-      loadProjectsButton.setText("view projects");
-      loadProjectsButton.addActionListener(new ActionListener()
-      {
-
-         public void actionPerformed(ActionEvent e)
-         {
-            ServerInfo info = (ServerInfo) serverCombo.getItemAt(serverCombo.getSelectedIndex());
-            controller.buttonPressViewProjects(info);
-         }
-      });
-   }
-
-   private void loadServersIntoDropdown()
-   {
-      for (ServerInfo info : controller.getServerInfo())
-      {
-         serverCombo.addItem(info);
-      }
-      statusLabel.setText("Select a server");
-   }
+   /**
+    * Retrieve info for the server that is currently selected by the user.
+    */
+   ServerInfo getSelectedServerInfo();
 
 }
