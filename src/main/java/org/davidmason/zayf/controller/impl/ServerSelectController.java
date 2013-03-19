@@ -23,6 +23,9 @@ import java.awt.event.ActionListener;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.SwingWorker;
 
 import org.davidmason.zayf.config.ConfigLoader;
 import org.davidmason.zayf.controller.ServerConfigLoader;
@@ -49,8 +52,8 @@ class ServerSelectController implements ServerConfigLoader
 
    @Inject
    ServerSelectController(ServerSelectView<?> sSView,
-                                 ProjectTreeController projectTreeController,
-                                 DocumentsController docsController)
+                          ProjectTreeController projectTreeController,
+                          DocumentsController docsController)
    {
       this.view = sSView;
       this.projectTreeController = projectTreeController;
@@ -70,7 +73,40 @@ class ServerSelectController implements ServerConfigLoader
 
    public void loadServersFromConfig()
    {
-      this.view.showServers(getServerInfo());
+      SwingWorker<List<ServerInfo>, Void> loadServerWorker =
+            new SwingWorker<List<ServerInfo>, Void>()
+            {
+
+               @Override
+               protected List<ServerInfo> doInBackground() throws Exception
+               {
+                  return getServerInfo();
+               }
+
+               @Override
+               protected void done()
+               {
+                  if (!isCancelled())
+                  {
+                     try
+                     {
+                        view.showServers(get());
+                     }
+                     catch (InterruptedException e)
+                     {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                     }
+                     catch (ExecutionException e)
+                     {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                     }
+                  }
+               }
+            };
+
+      loadServerWorker.execute();
    }
 
    private List<ServerInfo> getServerInfo()

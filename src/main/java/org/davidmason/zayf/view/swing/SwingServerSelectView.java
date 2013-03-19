@@ -86,7 +86,14 @@ class SwingServerSelectView extends JPanel implements ServerSelectView<Component
                                                        boolean cellHasFocus)
          {
             ServerInfo serverInfo = (ServerInfo) value;
-            value = serverInfo.getUserName() + " | " + serverInfo.getServerUrl();
+            if (serverInfo == null)
+            {
+               value = "loading...";
+            }
+            else
+            {
+               value = serverInfo.getUserName() + " | " + serverInfo.getServerUrl();
+            }
             return super.getListCellRendererComponent(list, value, index, isSelected,
                                                       cellHasFocus);
          }

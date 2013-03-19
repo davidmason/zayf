@@ -24,6 +24,8 @@ import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.SwingUtilities;
+
 import org.davidmason.zayf.controller.ServerConfigLoader;
 import org.davidmason.zayf.controller.impl.ControllerModule;
 import org.davidmason.zayf.view.MainWindow;
@@ -41,7 +43,7 @@ public class Zayf
 
    public static void main(String[] args)
    {
-      javax.swing.SwingUtilities.invokeLater(new Runnable()
+      SwingUtilities.invokeLater(new Runnable()
       {
 
          public void run()
