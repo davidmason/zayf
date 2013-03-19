@@ -84,13 +84,9 @@ public class ConfigLoader
    {
       List<String> prefixes = new ArrayList<String>();
       Iterator<String> iter = serverConfig.getKeys();
-      // TODO log.debug
-      System.out.print("Keys: ");
       while (iter.hasNext())
       {
          String key = iter.next();
-         // TODO log.debug
-         System.out.print(key + " ");
          if (key.endsWith(URL_KEY_SUFFIX))
          {
             String prefix = key.substring(0, key.length() - URL_KEY_SUFFIX.length());
@@ -100,8 +96,6 @@ public class ConfigLoader
             }
          }
       }
-      // TODO log.debug
-      System.out.println();
       return prefixes;
    }
 
@@ -115,9 +109,6 @@ public class ConfigLoader
          String urlKey = prefix + URL_KEY_SUFFIX;
          String userNameKey = prefix + USER_NAME_SUFFIX;
          String apiKeyKey = prefix + API_KEY_SUFFIX;
-         // TODO log.debug
-         System.out.println("urlKey: " + urlKey + " userNameKey: " + userNameKey + " apiKeyKey: "
-                            + apiKeyKey);
          ServerInfo server =
                new ServerInfo(prefix, serverConfig.getURL(urlKey, null),
                               serverConfig.getString(userNameKey, null),

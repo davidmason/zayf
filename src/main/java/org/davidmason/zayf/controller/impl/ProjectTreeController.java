@@ -94,17 +94,6 @@ class ProjectTreeController
       return listener;
    }
 
-   // public String getServerUrl() {
-   // if (currentServer != null) {
-   // return currentServer.getServerUrl().toString();
-   // }
-   // return null;
-   // }
-
-   // public void setServer(ServerInfo server) {
-   // currentServer = server;
-   // }
-
    public void setServer(ServerProxy server)
    {
       this.server = server;
