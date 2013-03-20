@@ -104,35 +104,9 @@ class ProjectTreeController
 
       // TODO set UI to show "loading prjects for [SERVER]"
 
-      SwingWorker<TreeModel, Void> fetchProjectWorker = new SwingWorker<TreeModel, Void>()
-      {
+      // TODO cancel existing project list fetches when starting a new one?
 
-         @Override
-         protected TreeModel doInBackground() throws Exception
-         {
-            return fetchProjectsAndBuildModel(server);
-         }
-
-         @Override
-         protected void done()
-         {
-            try
-            {
-               view.showProjectTree(get());
-            }
-            catch (InterruptedException e)
-            {
-               // TODO Auto-generated catch block
-               e.printStackTrace();
-            }
-            catch (ExecutionException e)
-            {
-               // TODO Auto-generated catch block
-               e.printStackTrace();
-            }
-         }
-      };
-      fetchProjectWorker.execute();
+      (new FetchProjectsWorker()).execute();
    }
 
    private TreeModel fetchProjectsAndBuildModel(ServerProxy server)
@@ -197,4 +171,32 @@ class ProjectTreeController
       }
    }
 
+   private class FetchProjectsWorker extends SwingWorker<TreeModel, Void>
+   {
+
+      @Override
+      protected TreeModel doInBackground() throws Exception
+      {
+         return fetchProjectsAndBuildModel(server);
+      }
+
+      @Override
+      protected void done()
+      {
+         try
+         {
+            view.showProjectTree(get());
+         }
+         catch (InterruptedException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+         catch (ExecutionException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+      }
+   }
 }
