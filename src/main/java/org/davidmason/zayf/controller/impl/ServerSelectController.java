@@ -118,6 +118,12 @@ class ServerSelectController implements ServerConfigLoader
    // FIXME should have a single server proxy reference for all components
    private void updateServerAndLoadProjects(ServerInfo info)
    {
+      if (info == null)
+      {
+         // TODO show error dialog (no server selected)
+         return;
+      }
+
       URI uri;
       try
       {
@@ -125,16 +131,14 @@ class ServerSelectController implements ServerConfigLoader
       }
       catch (URISyntaxException e)
       {
-         // TODO show failure message
+         // TODO show failure message in UI
          // TODO clear projects tree, or add a heading so it shows which server is being displayed.
          System.out.println("invalid URL for selected server");
          return;
       }
       ServerProxy proxy = new ServerProxyImpl(uri, info.getUserName(), info.getApiKey());
       // TODO hand this to project display controller
-      System.out.println("Show projects for " + info.getServerUrl());
-      projectTreeController.setServer(proxy);
-      projectTreeController.fetchProjectList();
+      projectTreeController.fetchProjectList(proxy);
       // FIXME normalize how server proxy is accessed
       docsController.setServer(proxy);
    }

@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import javax.swing.SwingWorker;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -49,7 +51,6 @@ class ProjectTreeController
 {
 
    private ProjectTreeView<?> view;
-   // private ServerInfo currentServer;
    private ServerProxy server;
 
    // TODO use interface for this, and change to action listener pattern
@@ -57,7 +58,7 @@ class ProjectTreeController
 
    @Inject
    ProjectTreeController(ProjectTreeView<?> view,
-                                ProjectDetailsController projectDetailsController)
+                         ProjectDetailsController projectDetailsController)
    {
       this.view = view;
       this.projectDetailsDisplayer = projectDetailsController;
@@ -94,15 +95,47 @@ class ProjectTreeController
       return listener;
    }
 
-   public void setServer(ServerProxy server)
-   {
-      this.server = server;
-   }
-
    /**
     * Fetches the project list for the currently selected server
     */
-   public void fetchProjectList()
+   public void fetchProjectList(final ServerProxy server)
+   {
+      this.server = server;
+
+      // TODO set UI to show "loading prjects for [SERVER]"
+
+      SwingWorker<TreeModel, Void> fetchProjectWorker = new SwingWorker<TreeModel, Void>()
+      {
+
+         @Override
+         protected TreeModel doInBackground() throws Exception
+         {
+            return fetchProjectsAndBuildModel(server);
+         }
+
+         @Override
+         protected void done()
+         {
+            try
+            {
+               view.showProjectTree(get());
+            }
+            catch (InterruptedException e)
+            {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
+            catch (ExecutionException e)
+            {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
+         }
+      };
+      fetchProjectWorker.execute();
+   }
+
+   private TreeModel fetchProjectsAndBuildModel(ServerProxy server)
    {
       // create model to populate
       DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
@@ -139,7 +172,7 @@ class ProjectTreeController
       }
 
       TreeModel model = new DefaultTreeModel(rootNode);
-      view.showProjectTree(model);
+      return model;
    }
 
    // Probably won't use this, but keeping the code here for reference on fetching iterations
