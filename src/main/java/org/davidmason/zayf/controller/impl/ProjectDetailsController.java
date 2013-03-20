@@ -21,6 +21,10 @@ package org.davidmason.zayf.controller.impl;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.SwingWorker;
+import javax.swing.tree.TreeModel;
 
 import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.view.ProjectDetailsView;
@@ -43,10 +47,11 @@ class ProjectDetailsController
    private final VersionDetailsController versionDisplayer;
    private List<ProjectIteration> versionList;
    private Project project;
+   private ServerProxy server;
 
    @Inject
    ProjectDetailsController(ProjectDetailsView<?> view,
-                                   VersionDetailsController versionDetailsController)
+                            VersionDetailsController versionDetailsController)
    {
       this.view = view;
       this.versionDisplayer = versionDetailsController;
@@ -91,6 +96,7 @@ class ProjectDetailsController
    public void loadProject(Project project, ServerProxy server)
    {
       this.project = project;
+      this.server = server;
       view.showProjectDetails(project);
 
       if (project == null)
@@ -99,11 +105,52 @@ class ProjectDetailsController
       }
       else
       {
-         versionList = server.getVersionList(project.getId());
-         view.showVersions(versionList);
+         view.showVersionsLoading();
+
+         (new FetchVersionListWorker(server, project.getId())).execute();
       }
 
       // clear version display to avoid confusion
+      // since no version is selected
       versionDisplayer.showVersion(project, null);
+   }
+
+   private class FetchVersionListWorker extends SwingWorker<List<ProjectIteration>, Void>
+   {
+
+      private ServerProxy server;
+      private String projectId;
+
+      public FetchVersionListWorker(ServerProxy server, String projectId)
+      {
+         this.server = server;
+         this.projectId = projectId;
+      }
+
+      @Override
+      protected List<ProjectIteration> doInBackground() throws Exception
+      {
+         return server.getVersionList(projectId);
+      }
+
+      @Override
+      protected void done()
+      {
+         try
+         {
+            versionList = get();
+         }
+         catch (InterruptedException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+         catch (ExecutionException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+         view.showVersions(versionList);
+      }
    }
 }
