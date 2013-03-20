@@ -24,12 +24,15 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
+import javax.swing.SwingWorker;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 
 import org.davidmason.zayf.rest.ServerProxy;
+import org.davidmason.zayf.util.Util;
 import org.davidmason.zayf.view.DocumentsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
@@ -59,21 +62,18 @@ class DocumentsController
       this.server = server;
    }
 
+   // TODO put server in this method signature
    public void fetchDocumentList(Project project, ProjectIteration version)
    {
       String projectId = project.getId();
       String versionId = version.getId();
-      List<ResourceMeta> documents = server.getDocList(projectId, versionId);
-
-      // TODO set window title to project/version
-
-      TreeModel model = buildTreeModel(projectId, versionId, documents);
       view.setTitle(project.getName() + " : " + versionId);
-      view.showDocumentsTree(model);
+      view.showDocumentsLoading();
+      (new FetchDocumentListWorker(projectId, versionId, server)).execute();
    }
 
-   private DefaultTreeModel buildTreeModel(String projectId, String versionId,
-                                           List<ResourceMeta> documents)
+   private static DefaultTreeModel buildTreeModel(String projectId, String versionId,
+                                                  List<ResourceMeta> documents)
    {
       // TODO make this more representative of project-version?
       // will probably be hidden anyway though.
@@ -119,9 +119,10 @@ class DocumentsController
    // FIXME cutting characters off path
    // FIXME docs in root dir are put under blank folder
 
-   private DefaultMutableTreeNode addPathNodes(DefaultMutableTreeNode rootNode,
-                                               Map<String, DefaultMutableTreeNode> pathNodes,
-                                               String pathNoTrailingSlash)
+   private static DefaultMutableTreeNode
+         addPathNodes(DefaultMutableTreeNode rootNode,
+                      Map<String, DefaultMutableTreeNode> pathNodes,
+                      String pathNoTrailingSlash)
    {
       // 1. is it the root node? (return root node)
       if (pathNoTrailingSlash.isEmpty())
@@ -136,7 +137,7 @@ class DocumentsController
          return pathNode;
       }
 
-      String endOfPath = view.getEndOfPath(pathNoTrailingSlash);
+      String endOfPath = Util.getEndOfPath(pathNoTrailingSlash);
       pathNode = new DefaultMutableTreeNode(endOfPath, true);
       pathNodes.put(pathNoTrailingSlash, pathNode);
 
@@ -154,7 +155,7 @@ class DocumentsController
       return pathNode;
    }
 
-   private String getBeginningOfPath(String path)
+   private static String getBeginningOfPath(String path)
    {
       int finalSlash = path.lastIndexOf('/');
       if (finalSlash == -1)
@@ -168,4 +169,46 @@ class DocumentsController
       throw new RuntimeException("Slash on start or end of path: " + path);
    }
 
+   private class FetchDocumentListWorker extends SwingWorker<TreeModel, Void>
+   {
+
+      private String projectId;
+      private String versionId;
+      private ServerProxy server;
+
+      public FetchDocumentListWorker(String projectId, String versionId, ServerProxy server)
+      {
+         this.projectId = projectId;
+         this.versionId = versionId;
+         this.server = server;
+      }
+
+      @Override
+      protected TreeModel doInBackground() throws Exception
+      {
+         List<ResourceMeta> documents = server.getDocList(projectId, versionId);
+         return buildTreeModel(projectId, versionId, documents);
+      }
+
+      @Override
+      protected void done()
+      {
+         TreeModel model;
+         try
+         {
+            model = get();
+            view.showDocumentsTree(model);
+         }
+         catch (InterruptedException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+         catch (ExecutionException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+      }
+   }
 }

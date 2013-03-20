@@ -33,6 +33,12 @@ public interface ProjectTreeView<WidgetType> extends WidgetView<WidgetType>
 {
 
    /**
+    * Display a message indicating that projects are currently loading. This message will
+    * automatically clear when {@link #showProjectTree(TreeModel)} is called.
+    */
+   void showProjectsLoading();
+
+   /**
     * Display the given model.
     */
    public void showProjectTree(TreeModel model);

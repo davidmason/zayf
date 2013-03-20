@@ -21,6 +21,7 @@ package org.davidmason.zayf.view.swing;
 import java.awt.Component;
 
 import org.davidmason.zayf.view.DocumentsView;
+import org.davidmason.zayf.view.MainWindow;
 import org.davidmason.zayf.view.ProjectDetailsView;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.davidmason.zayf.view.ServerSelectView;
@@ -41,6 +42,8 @@ public class SwingViewModule extends AbstractModule
    @Override
    protected void configure()
    {
+      bind(MainWindow.class).asEagerSingleton();
+
       //@formatter:off
       bindSwingView(DocumentsView.class, SwingDocumentsView.class,
                     new TypeLiteral<DocumentsView<?>>() {},

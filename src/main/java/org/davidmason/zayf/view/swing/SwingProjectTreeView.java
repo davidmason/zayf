@@ -21,6 +21,7 @@ package org.davidmason.zayf.view.swing;
 import java.awt.BorderLayout;
 import java.awt.Component;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.TreeSelectionListener;
@@ -38,10 +39,16 @@ import org.davidmason.zayf.view.ProjectTreeView;
 class SwingProjectTreeView extends JPanel implements ProjectTreeView<Component>
 {
 
+   private static final String NO_SERVER_SELECTED = "No server selected.";
+   private static final String LOADING_PROJECTS = "Loading projects...";
+
    private static final long serialVersionUID = 1L;
 
    private JScrollPane treeView;
    private ProjectsTree projectsTree;
+
+   private JLabel noServerLabel, loadingProjectsLabel;
+   private JPanel noServerPanel, loadingProjectsPanel;
 
    public SwingProjectTreeView()
    {
@@ -61,13 +68,44 @@ class SwingProjectTreeView extends JPanel implements ProjectTreeView<Component>
       projectsTree = new ProjectsTree();
       treeView = new JScrollPane(projectsTree);
 
-      add(treeView, BorderLayout.CENTER);
+      buildNoServerPanel();
+      buildLoadingProjectsPanel();
+
+      add(noServerPanel, BorderLayout.CENTER);
+   }
+
+   private void buildNoServerPanel()
+   {
+      noServerPanel = new JPanel();
+      noServerLabel = new JLabel(NO_SERVER_SELECTED);
+      noServerPanel.add(noServerLabel);
+   }
+
+   private void buildLoadingProjectsPanel()
+   {
+      loadingProjectsPanel = new JPanel();
+      loadingProjectsLabel = new JLabel(LOADING_PROJECTS);
+      loadingProjectsPanel.add(loadingProjectsLabel);
+   }
+
+   @Override
+   public void showProjectsLoading()
+   {
+      removeAll();
+      add(loadingProjectsPanel, BorderLayout.CENTER);
+      revalidate();
+      repaint();
    }
 
    @Override
    public void showProjectTree(TreeModel model)
    {
       projectsTree.setModel(model);
+
+      removeAll();
+      add(treeView, BorderLayout.CENTER);
+      revalidate();
+      repaint();
    }
 
    @Override

@@ -102,7 +102,7 @@ class ProjectTreeController
    {
       this.server = server;
 
-      // TODO set UI to show "loading prjects for [SERVER]"
+      view.showProjectsLoading();
 
       // TODO cancel existing project list fetches when starting a new one?
 

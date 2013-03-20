@@ -1,6 +1,6 @@
 /*
  * Zayf (Zanata at your Fingertips) - a Zanata client for unstable connections
- * Copyright (C) 2012  Alister Symons and David Mason
+ * Copyright (C) 2013  Alister Symons and David Mason
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,35 +16,28 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.view;
-
-import javax.swing.tree.TreeModel;
+package org.davidmason.zayf.util;
 
 /**
- * View interface for displaying a tree of documents.
+ * Utility methods for the main Zayf application.
  * 
  * @author David Mason, dr.d.mason@gmail.com
  * 
- * @param <WidgetType>
- *           return type for {{@link #asWidget()}
  */
-public interface DocumentsView<WidgetType> extends WidgetView<WidgetType>
+public class Util
 {
 
-   /**
-    * Set title for document display area
-    */
-   public void setTitle(String title);
-
-   /**
-    * Display a message indicating that documents are currently loading. This message will
-    * automatically clear when {@link #showDocumentsTree(TreeModel)} is called.
-    */
-   public void showDocumentsLoading();
-
-   /**
-    * Display a given tree of documents.
-    */
-   public void showDocumentsTree(TreeModel model);
-
+   public static String getEndOfPath(String path)
+   {
+      int finalSlash = path.lastIndexOf("/");
+      if (finalSlash == -1)
+      {
+         return path;
+      }
+      if (finalSlash != path.length() - 1)
+      {
+         return path.substring(finalSlash + 1);
+      }
+      throw new RuntimeException("Slash on end of path: " + path);
+   }
 }

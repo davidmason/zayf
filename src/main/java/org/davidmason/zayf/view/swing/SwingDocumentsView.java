@@ -22,13 +22,19 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 
+import org.davidmason.zayf.util.Util;
 import org.davidmason.zayf.view.DocumentsView;
+import org.davidmason.zayf.view.MainWindow;
 import org.zanata.rest.dto.resource.ResourceMeta;
+
+import com.google.inject.Inject;
 
 /**
  * Default Swing implementation of {@link DocumentsView}.
@@ -42,16 +48,22 @@ class SwingDocumentsView extends JFrame implements DocumentsView<Component>
    private static final long serialVersionUID = 1L;
 
    private static final String TITLE_PREFIX = "Zayf - documents - ";
+   private static final String LOADING_DOCUMENTS = "Loading documents...";
 
    private JTree documentsTree;
    private JScrollPane treeView;
+   private JPanel loadingDocumentsPanel;
+   private JLabel loadingDocumentsLabel;
 
-   public SwingDocumentsView()
+   private final MainWindow mainWindow;
+
+   @Inject
+   public SwingDocumentsView(MainWindow mainWindow)
    {
+      this.mainWindow = mainWindow;
       buildGui();
    }
 
-   @SuppressWarnings("serial")
    private void buildGui()
    {
       setLayout(new BorderLayout());
@@ -59,8 +71,25 @@ class SwingDocumentsView extends JFrame implements DocumentsView<Component>
       setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
       setBounds(0, 0, 480, 640);
       // TODO position relative to other window
-      setLocationRelativeTo(null);
+      setLocationRelativeTo(mainWindow);
 
+      buildDocumentsTree();
+      buildLoadingDocumentsPanel();
+
+      // TODO don't show treeview initially
+      add(treeView, BorderLayout.CENTER);
+   }
+
+   private void buildLoadingDocumentsPanel()
+   {
+      loadingDocumentsLabel = new JLabel(LOADING_DOCUMENTS);
+      loadingDocumentsPanel = new JPanel();
+      loadingDocumentsPanel.add(loadingDocumentsLabel);
+   }
+
+   @SuppressWarnings("serial")
+   private void buildDocumentsTree()
+   {
       documentsTree = new JTree()
       {
 
@@ -72,7 +101,7 @@ class SwingDocumentsView extends JFrame implements DocumentsView<Component>
             {
                String docPathAndName =
                      ((ResourceMeta) ((DefaultMutableTreeNode) value).getUserObject()).getName();
-               return getEndOfPath(docPathAndName);
+               return Util.getEndOfPath(docPathAndName);
             }
 
             return value.toString();
@@ -83,13 +112,26 @@ class SwingDocumentsView extends JFrame implements DocumentsView<Component>
       documentsTree.putClientProperty("JTree.lineStyle", "Angled");
 
       treeView = new JScrollPane(documentsTree);
-      add(treeView, BorderLayout.CENTER);
    }
 
    @Override
    public void setTitle(String title)
    {
       super.setTitle(TITLE_PREFIX + title);
+   }
+
+   @Override
+   public void showDocumentsLoading()
+   {
+      setVisible(false);
+      remove(loadingDocumentsPanel);
+      remove(treeView);
+
+      add(loadingDocumentsPanel, BorderLayout.CENTER);
+      loadingDocumentsPanel.revalidate();
+      loadingDocumentsPanel.repaint();
+      setLocationRelativeTo(mainWindow);
+      setVisible(true);
    }
 
    @Override
@@ -101,23 +143,15 @@ class SwingDocumentsView extends JFrame implements DocumentsView<Component>
       {
          documentsTree.expandRow(row);
       }
-      setVisible(true);
-   }
 
-   // FIXME this should be in a util class
-   @Override
-   public String getEndOfPath(String path)
-   {
-      int finalSlash = path.lastIndexOf("/");
-      if (finalSlash == -1)
-      {
-         return path;
-      }
-      if (finalSlash != path.length() - 1)
-      {
-         return path.substring(finalSlash + 1);
-      }
-      throw new RuntimeException("Slash on end of path: " + path);
+      remove(loadingDocumentsPanel);
+      remove(treeView);
+
+      add(treeView, BorderLayout.CENTER);
+      treeView.revalidate();
+      treeView.repaint();
+      setLocationRelativeTo(mainWindow);
+      setVisible(true);
    }
 
    @Override
