@@ -47,17 +47,19 @@ class SwingProjectDetailsView extends JPanel implements ProjectDetailsView<Compo
 
    private static final String NO_PROJECT_SELECTED = "No project selected";
    private static final String NO_VERSIONS = "No versions to display";
+   private static final String VERSIONS_LOADING = "Loading versions...";
    private static final String ID_FIELD_NAME = "Project ID: ";
    private static final String NAME_FIELD_NAME = "Name: ";
    private static final String DESC_FIELD_NAME = "Desc: ";
 
    private JSplitPane projectPanel;
-   private JPanel projectDetailPanel, noProjectPanel, versionPanel, noVersionsPanel;
+   private JPanel projectDetailPanel, noProjectPanel, versionPanel, noVersionsPanel,
+         versionsLoadingPanel;
 
-   private JLabel noProjectLabel, noVersionLabel, idLabel, nameLabel, descLabel;
+   private JLabel noProjectLabel, noVersionLabel, idLabel, nameLabel, descLabel,
+         versionsLoadingLabel;
 
    private boolean showingProject;
-   private boolean showingVersions;
 
    private ActionListener versionSelectedListener;
 
@@ -80,6 +82,7 @@ class SwingProjectDetailsView extends JPanel implements ProjectDetailsView<Compo
    {
       buildVersionPanel();
       buildNoVersionPanel();
+      buildVersionsLoadingPanel();
       buildProjectDetailPanel();
 
       projectPanel =
@@ -87,8 +90,6 @@ class SwingProjectDetailsView extends JPanel implements ProjectDetailsView<Compo
       projectPanel.setDividerLocation(80);
       projectPanel.setDividerSize(3);
       projectPanel.setEnabled(true);
-
-      showingVersions = false;
    }
 
    private void buildProjectDetailPanel()
@@ -125,6 +126,13 @@ class SwingProjectDetailsView extends JPanel implements ProjectDetailsView<Compo
       noVersionsPanel.add(noVersionLabel);
    }
 
+   private void buildVersionsLoadingPanel()
+   {
+      versionsLoadingPanel = new JPanel();
+      versionsLoadingLabel = new JLabel(VERSIONS_LOADING);
+      versionsLoadingPanel.add(versionsLoadingLabel);
+   }
+
    @Override
    public void showProjectDetails(Project project)
    {
@@ -158,6 +166,14 @@ class SwingProjectDetailsView extends JPanel implements ProjectDetailsView<Compo
    }
 
    @Override
+   public void showVersionsLoading()
+   {
+      removeVersionPanels();
+      projectPanel.add(versionsLoadingPanel, JSplitPane.BOTTOM);
+      revalidate();
+   }
+
+   @Override
    public void showVersions(List<ProjectIteration> versions)
    {
       // clear iterations from display
@@ -165,13 +181,11 @@ class SwingProjectDetailsView extends JPanel implements ProjectDetailsView<Compo
 
       if (versions == null || versions.isEmpty())
       {
-         if (showingVersions)
-         {
-            projectPanel.remove(versionPanel);
-            projectPanel.add(noVersionsPanel, JSplitPane.BOTTOM);
-            showingVersions = false;
-            revalidate();
-         }
+
+         removeVersionPanels();
+         projectPanel.add(noVersionsPanel, JSplitPane.BOTTOM);
+         revalidate();
+
          return;
       }
       // show each version
@@ -182,13 +196,17 @@ class SwingProjectDetailsView extends JPanel implements ProjectDetailsView<Compo
             versionPanel.add(buildVersionTile(version));
          }
       }
-      if (!showingVersions)
-      {
-         projectPanel.remove(noVersionsPanel);
-         projectPanel.add(versionPanel, JSplitPane.BOTTOM);
-         showingVersions = true;
-      }
+
+      projectPanel.remove(noVersionsPanel);
+      projectPanel.add(versionPanel, JSplitPane.BOTTOM);
       revalidate();
+   }
+
+   private void removeVersionPanels()
+   {
+      projectPanel.remove(versionPanel);
+      projectPanel.remove(noVersionsPanel);
+      projectPanel.remove(versionsLoadingPanel);
    }
 
    private Component buildVersionTile(ProjectIteration version)

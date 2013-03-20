@@ -44,6 +44,12 @@ public interface ProjectDetailsView<WidgetType> extends WidgetView<WidgetType>
    public void showProjectDetails(Project project);
 
    /**
+    * Display a message indicating that versions are currently loading. This message will
+    * automatically clear when {@link #showVersions(List)} is called.
+    */
+   public void showVersionsLoading();
+
+   /**
     * Display a list of versions from which a user can select a version.
     * 
     * @see #setVersionSelectedListener(ActionListener)
