@@ -31,6 +31,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 
+import org.davidmason.zayf.cache.Mirror;
 import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.util.Util;
 import org.davidmason.zayf.view.DocumentsView;
@@ -50,11 +51,13 @@ class DocumentsController
 
    private ServerProxy server;
    private DocumentsView<?> view;
+   private Mirror mirror;
 
    @Inject
-   DocumentsController(DocumentsView<?> view)
+   DocumentsController(DocumentsView<?> view, Mirror mirror)
    {
       this.view = view;
+      this.mirror = mirror;
    }
 
    public void setServer(ServerProxy server)

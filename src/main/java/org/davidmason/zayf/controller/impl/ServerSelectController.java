@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
 
+import org.davidmason.zayf.cache.Mirror;
 import org.davidmason.zayf.config.ConfigLoader;
 import org.davidmason.zayf.controller.ServerConfigLoader;
 import org.davidmason.zayf.model.ServerInfo;
@@ -49,15 +50,18 @@ class ServerSelectController implements ServerConfigLoader
    private ServerSelectView<?> view;
    private ProjectTreeController projectTreeController;
    private DocumentsController docsController;
+   private final Mirror mirror;
 
    @Inject
    ServerSelectController(ServerSelectView<?> sSView,
                           ProjectTreeController projectTreeController,
-                          DocumentsController docsController)
+                          DocumentsController docsController,
+                          Mirror mirror)
    {
       this.view = sSView;
       this.projectTreeController = projectTreeController;
       this.docsController = docsController;
+      this.mirror = mirror;
 
       this.view.addLoadProjectListener(new ActionListener()
       {
@@ -136,6 +140,10 @@ class ServerSelectController implements ServerConfigLoader
          System.out.println("invalid URL for selected server");
          return;
       }
+
+      // add server to database as a parent for any downloaded or tracked projects
+      mirror.addServer(info);
+
       ServerProxy proxy = new ServerProxyImpl(uri, info.getUserName(), info.getApiKey());
       // TODO hand this to project display controller
       projectTreeController.fetchProjectList(proxy);

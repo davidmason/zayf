@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.SwingUtilities;
 
+import org.davidmason.zayf.cache.neo.NeoMirrorModule;
 import org.davidmason.zayf.controller.ServerConfigLoader;
 import org.davidmason.zayf.controller.impl.ControllerModule;
 import org.davidmason.zayf.view.MainWindow;
@@ -59,7 +60,9 @@ public class Zayf
    {
       final ZayfTrayIcon icon = makeTrayIcon();
 
-      Injector injector = Guice.createInjector(new SwingViewModule(), new ControllerModule());
+      Injector injector =
+            Guice.createInjector(new SwingViewModule(), new ControllerModule(),
+                                 new NeoMirrorModule());
       final MainWindow mainWindow2 = injector.getInstance(MainWindow.class);
 
       addIconActionListener(mainWindow2, icon);

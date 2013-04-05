@@ -21,6 +21,8 @@
  */
 package org.davidmason.zayf.cache;
 
+import org.davidmason.zayf.model.ServerInfo;
+
 /**
  * <p>
  * Primary interface to classes that store an on-disk copy of tracked projects.
@@ -54,4 +56,10 @@ public interface Mirror
 
    // targets (document)         List<TextFlowTarget>
 
+   /**
+    * Add a server to the mirror.
+    * 
+    * @param serverInfo
+    */
+   void addServer(ServerInfo serverInfo);
 }
