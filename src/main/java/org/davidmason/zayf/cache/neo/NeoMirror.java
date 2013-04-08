@@ -18,6 +18,7 @@
  */
 package org.davidmason.zayf.cache.neo;
 
+import org.apache.log4j.Logger;
 import org.davidmason.zayf.cache.Mirror;
 import org.davidmason.zayf.model.ServerInfo;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
@@ -43,11 +44,12 @@ import com.google.inject.Provider;
 public class NeoMirror implements Mirror
 {
 
+   private Logger log = Logger.getLogger(NeoMirror.class);
+
    private static final String REFERENCE_NODES_INDEX_NAME = "ref";
    private static final String REFERENCE_NODES_KEY = "ref";
    private static final String SERVERS_INDEX_NAME = "servers";
    private static final String SERVER_URL_KEY = "url";
-   private static final String SERVER_NAME_KEY = "name";
    private Provider<GraphDatabaseService> databaseProvider;
 
    /**
@@ -68,7 +70,6 @@ public class NeoMirror implements Mirror
    public NeoMirror(Provider<GraphDatabaseService> databaseProvider)
    {
       this.databaseProvider = databaseProvider;
-      // TODO Auto-generated constructor stub
       ensureDatabaseStructure();
    }
 
@@ -135,20 +136,17 @@ public class NeoMirror implements Mirror
    {
       GraphDatabaseService db = databaseProvider.get();
       Node refNode = db.getReferenceNode();
-      System.out.println("relationships from reference node");
+      log.info("relationships from reference node");
       for (Relationship rel : refNode.getRelationships())
       {
-         System.out.println("relationship type: " + rel.getType());
-         System.out.println(rel.getOtherNode(refNode).getProperty("name"));
+         log.info("relationship type: " + rel.getType() + " name: "
+                  + rel.getOtherNode(refNode).getProperty("name"));
       }
-      System.out.println("nodes by lookup in reference index");
+      log.info("nodes by lookup in reference index");
       Index<Node> refNodesIndex = db.index().forNodes(REFERENCE_NODES_INDEX_NAME);
-      System.out.println(refNodesIndex.get(REFERENCE_NODES_KEY, "servers").getSingle()
-                                      .getProperty("name"));
-      System.out.println(refNodesIndex.get(REFERENCE_NODES_KEY, "projects").getSingle()
-                                      .getProperty("name"));
-      System.out.println(refNodesIndex.get(REFERENCE_NODES_KEY, "documents").getSingle()
-                                      .getProperty("name"));
+      log.info(refNodesIndex.get(REFERENCE_NODES_KEY, "servers").getSingle().getProperty("name"));
+      log.info(refNodesIndex.get(REFERENCE_NODES_KEY, "projects").getSingle().getProperty("name"));
+      log.info(refNodesIndex.get(REFERENCE_NODES_KEY, "documents").getSingle().getProperty("name"));
    }
 
    @Override
@@ -196,7 +194,8 @@ public class NeoMirror implements Mirror
       // for debugging: print out all the servers in the database
       for (Relationship rel : serverRef.getRelationships(Direction.INCOMING, RelTypes.ROOT))
       {
-         System.out.println(rel.getEndNode().getProperty("name") + " --> " + rel.getStartNode().getProperty(SERVER_URL_KEY));
+         log.info(rel.getEndNode().getProperty("name") + " --> "
+                  + rel.getStartNode().getProperty(SERVER_URL_KEY));
       }
 
 //      Traversal.traversal().relationships(RelTypes.ROOT, Direction.INCOMING).evaluator(Evaluators.excludeStartPosition()).evaluator(Evaluators.);

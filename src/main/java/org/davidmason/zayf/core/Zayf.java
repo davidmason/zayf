@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.SwingUtilities;
 
+import org.apache.log4j.Logger;
 import org.davidmason.zayf.cache.neo.NeoMirrorModule;
 import org.davidmason.zayf.controller.ServerConfigLoader;
 import org.davidmason.zayf.controller.impl.ControllerModule;
@@ -42,6 +43,8 @@ import com.google.inject.Injector;
 public class Zayf
 {
 
+   private static Logger log = Logger.getLogger(Zayf.class);
+
    public static void main(String[] args)
    {
       SwingUtilities.invokeLater(new Runnable()
@@ -49,7 +52,7 @@ public class Zayf
 
          public void run()
          {
-            System.out.println("Loading application.");
+            log.info("Loading application.");
             runApplication();
          }
       });
@@ -84,8 +87,7 @@ public class Zayf
          }
          catch (AWTException e)
          {
-            System.out.println("Failed to add tray icon");
-            e.printStackTrace();
+            log.error("Failed to add tray icon", e);
          }
          icon.addExitListener(new ActionListener()
          {
@@ -93,6 +95,7 @@ public class Zayf
             @Override
             public void actionPerformed(ActionEvent e)
             {
+               log.info("Shutting down application.");
                // FIXME finish file writes and server communication before exit
                System.exit(0);
             }
@@ -104,7 +107,7 @@ public class Zayf
          // FIXME application cannot be closed without the above in its current form
          // make default behaviour close on [X], allow config to change this, and add an application
          // menu with exit option.
-         System.out.println("system tray not supported");
+         log.warn("System tray not supported. There is currently no alternative implementation.");
          return null;
       }
    }
@@ -120,6 +123,7 @@ public class Zayf
             boolean show = !mainWindow.isVisible();
             if (!show)
             {
+               // FIXME this will not display when the [X] is clicked. Change so that it is.
                icon.displayMessage("Zayf is minimized",
                                    "Double-click to restore. Right-click and select 'exit' to close",
                                    MessageType.INFO);
