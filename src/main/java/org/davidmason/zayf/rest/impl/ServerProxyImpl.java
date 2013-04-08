@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.davidmason.zayf.rest;
+package org.davidmason.zayf.rest.impl;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -35,6 +35,8 @@ import org.apache.commons.configuration.HierarchicalINIConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.log4j.Logger;
 import org.davidmason.zayf.model.ServerInfo;
+import org.davidmason.zayf.rest.ServerProxy;
+import org.davidmason.zayf.rest.ServerProxyExample;
 import org.jboss.resteasy.client.ClientResponse;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.client.IProjectResource;

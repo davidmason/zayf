@@ -32,7 +32,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 
 import org.davidmason.zayf.cache.Mirror;
-import org.davidmason.zayf.rest.ServerProxy;
+import org.davidmason.zayf.model.ServerInfo;
+import org.davidmason.zayf.rest.ServerProxyProvider;
 import org.davidmason.zayf.util.Util;
 import org.davidmason.zayf.view.DocumentsView;
 import org.zanata.rest.dto.Project;
@@ -49,30 +50,25 @@ import com.google.inject.Inject;
 class DocumentsController
 {
 
-   private ServerProxy server;
    private DocumentsView<?> view;
+   private final ServerProxyProvider proxyProvider;
    private Mirror mirror;
 
    @Inject
-   DocumentsController(DocumentsView<?> view, Mirror mirror)
+   DocumentsController(DocumentsView<?> view, ServerProxyProvider proxyProvider, Mirror mirror)
    {
       this.view = view;
+      this.proxyProvider = proxyProvider;
       this.mirror = mirror;
    }
 
-   public void setServer(ServerProxy server)
-   {
-      this.server = server;
-   }
-
-   // TODO put server in this method signature
-   public void fetchDocumentList(Project project, ProjectIteration version)
+   public void fetchDocumentList(ServerInfo server, Project project, ProjectIteration version)
    {
       String projectId = project.getId();
       String versionId = version.getId();
       view.setTitle(project.getName() + " : " + versionId);
       view.showDocumentsLoading();
-      (new FetchDocumentListWorker(projectId, versionId, server)).execute();
+      (new FetchDocumentListWorker(server, projectId, versionId)).execute();
    }
 
    private static DefaultTreeModel buildTreeModel(String projectId, String versionId,
@@ -175,21 +171,22 @@ class DocumentsController
    private class FetchDocumentListWorker extends SwingWorker<TreeModel, Void>
    {
 
+      private ServerInfo serverInfo;
       private String projectId;
       private String versionId;
-      private ServerProxy server;
 
-      public FetchDocumentListWorker(String projectId, String versionId, ServerProxy server)
+      public FetchDocumentListWorker(ServerInfo serverInfo, String projectId, String versionId)//, ServerProxy server)
       {
+         this.serverInfo = serverInfo;
          this.projectId = projectId;
          this.versionId = versionId;
-         this.server = server;
       }
 
       @Override
       protected TreeModel doInBackground() throws Exception
       {
-         List<ResourceMeta> documents = server.getDocList(projectId, versionId);
+         List<ResourceMeta> documents =
+               proxyProvider.get(serverInfo).getDocList(projectId, versionId);
          return buildTreeModel(projectId, versionId, documents);
       }
 

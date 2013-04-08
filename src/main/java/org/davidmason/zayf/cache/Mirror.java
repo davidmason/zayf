@@ -16,12 +16,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/**
- * 
- */
 package org.davidmason.zayf.cache;
 
+import java.util.List;
+
 import org.davidmason.zayf.model.ServerInfo;
+import org.zanata.rest.dto.Project;
 
 /**
  * <p>
@@ -38,6 +38,7 @@ import org.davidmason.zayf.model.ServerInfo;
  */
 public interface Mirror
 {
+
    // Might want to store:
 
    // project list               List<Project>
@@ -62,4 +63,12 @@ public interface Mirror
     * @param serverInfo
     */
    void addServer(ServerInfo serverInfo);
+
+   /**
+    * Add a project list to the mirror, associated with a specific server.
+    * 
+    * @param server
+    * @param projects
+    */
+   void addProjectList(String server, List<Project> projects);
 }

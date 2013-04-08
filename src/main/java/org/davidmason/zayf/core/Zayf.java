@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import org.davidmason.zayf.cache.neo.NeoMirrorModule;
 import org.davidmason.zayf.controller.ServerConfigLoader;
 import org.davidmason.zayf.controller.impl.ControllerModule;
+import org.davidmason.zayf.rest.impl.ServerProxyModule;
 import org.davidmason.zayf.view.MainWindow;
 import org.davidmason.zayf.view.ZayfTrayIcon;
 import org.davidmason.zayf.view.swing.SwingViewModule;
@@ -65,7 +66,7 @@ public class Zayf
 
       Injector injector =
             Guice.createInjector(new SwingViewModule(), new ControllerModule(),
-                                 new NeoMirrorModule());
+                                 new NeoMirrorModule(), new ServerProxyModule());
       final MainWindow mainWindow2 = injector.getInstance(MainWindow.class);
 
       addIconActionListener(mainWindow2, icon);

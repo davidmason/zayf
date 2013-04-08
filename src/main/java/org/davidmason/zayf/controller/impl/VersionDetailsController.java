@@ -21,6 +21,7 @@ package org.davidmason.zayf.controller.impl;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import org.davidmason.zayf.model.ServerInfo;
 import org.davidmason.zayf.view.VersionDetailsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
@@ -40,8 +41,9 @@ class VersionDetailsController
    private VersionDetailsView<?> view;
    private DocumentsController docsController;
 
-   private ProjectIteration version;
+   private ServerInfo server;
    private Project project;
+   private ProjectIteration version;
 
    @Inject
    VersionDetailsController(VersionDetailsView<?> view, DocumentsController docsControl)
@@ -57,7 +59,7 @@ class VersionDetailsController
          {
             if (e.getActionCommand().equals("show-documents"))
             {
-               docsController.fetchDocumentList(project, version);
+               docsController.fetchDocumentList(server, project, version);
             }
          }
       });
@@ -68,10 +70,12 @@ class VersionDetailsController
     * 
     * @param version
     */
-   public void showVersion(Project project, ProjectIteration version)
+   public void showVersion(ServerInfo server, Project project, ProjectIteration version)
    {
+      this.server = server;
       this.project = project;
       this.version = version;
+      // TODO lookup and display stats and any other relevant info
       view.displayVersion(version);
    }
 

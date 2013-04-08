@@ -18,6 +18,8 @@
  */
 package org.davidmason.zayf.cache.neo;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.davidmason.zayf.cache.Mirror;
 import org.davidmason.zayf.model.ServerInfo;
@@ -31,6 +33,7 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.kernel.Traversal;
+import org.zanata.rest.dto.Project;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -212,5 +215,12 @@ public class NeoMirror implements Mirror
       // Add or update server
 //      db.
 
+   }
+
+   @Override
+   public void addProjectList(String server, List<Project> projects)
+   {
+      // TODO Auto-generated method stub
+      log.error("addProjectList not implemented");
    }
 }

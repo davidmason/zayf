@@ -24,9 +24,10 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.SwingWorker;
-import javax.swing.tree.TreeModel;
 
-import org.davidmason.zayf.rest.ServerProxy;
+import org.apache.log4j.Logger;
+import org.davidmason.zayf.model.ServerInfo;
+import org.davidmason.zayf.rest.ServerProxyProvider;
 import org.davidmason.zayf.view.ProjectDetailsView;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
@@ -43,18 +44,23 @@ import com.google.inject.Inject;
 class ProjectDetailsController
 {
 
+   private Logger log = Logger.getLogger(ProjectDetailsController.class);
+
    private ProjectDetailsView<?> view;
    private final VersionDetailsController versionDisplayer;
    private List<ProjectIteration> versionList;
-   private Project project;
-   private ServerProxy server;
+   private Project currentProject;
+   private final ServerProxyProvider proxyProvider;
+   private ServerInfo currentServer;
 
    @Inject
    ProjectDetailsController(ProjectDetailsView<?> view,
-                            VersionDetailsController versionDetailsController)
+                            VersionDetailsController versionDetailsController,
+                            ServerProxyProvider proxyProvider)
    {
       this.view = view;
       this.versionDisplayer = versionDetailsController;
+      this.proxyProvider = proxyProvider;
       versionList = null;
       setupVersionSelectionListener();
    }
@@ -74,13 +80,13 @@ class ProjectDetailsController
                {
                   if (version.getId().equals(versionId))
                   {
-                     versionDisplayer.showVersion(project, version);
+                     versionDisplayer.showVersion(currentServer, currentProject, version);
                      return;
                   }
                }
                // didn't find version
-               // TODO some kind of error
-               System.out.println("Didn't find expected version: " + versionId);
+               // TODO some kind of error in UI
+               log.error("Didn't find expected version: " + versionId);
             }
          }
       });
@@ -90,13 +96,15 @@ class ProjectDetailsController
     * Display slug, name and description for a project, and look up versions
     * for display.
     * 
+    * @param server
+    *           on which project is hosted
     * @param project
     *           for which to show details, or null to show no project.
     */
-   public void loadProject(Project project, ServerProxy server)
+   public void loadProject(ServerInfo server, Project project)
    {
-      this.project = project;
-      this.server = server;
+      this.currentProject = project;
+      this.currentServer = server;
       view.showProjectDetails(project);
 
       if (project == null)
@@ -107,30 +115,28 @@ class ProjectDetailsController
       {
          view.showVersionsLoading();
 
-         (new FetchVersionListWorker(server, project.getId())).execute();
+         (new FetchVersionListWorker(project.getId())).execute();
       }
 
       // clear version display to avoid confusion
       // since no version is selected
-      versionDisplayer.showVersion(project, null);
+      versionDisplayer.showVersion(currentServer, project, null);
    }
 
    private class FetchVersionListWorker extends SwingWorker<List<ProjectIteration>, Void>
    {
 
-      private ServerProxy server;
       private String projectId;
 
-      public FetchVersionListWorker(ServerProxy server, String projectId)
+      public FetchVersionListWorker(String projectId)
       {
-         this.server = server;
          this.projectId = projectId;
       }
 
       @Override
       protected List<ProjectIteration> doInBackground() throws Exception
       {
-         return server.getVersionList(projectId);
+         return proxyProvider.get(currentServer).getVersionList(projectId);
       }
 
       @Override
@@ -142,13 +148,12 @@ class ProjectDetailsController
          }
          catch (InterruptedException e)
          {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("interrupted thread while fetching version list", e);
          }
          catch (ExecutionException e)
          {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            // FIXME display appropriate error in UI
+            log.error("exception while fetching version list", e);
          }
          view.showVersions(versionList);
       }

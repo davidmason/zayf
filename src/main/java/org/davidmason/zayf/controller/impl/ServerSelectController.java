@@ -20,8 +20,6 @@ package org.davidmason.zayf.controller.impl;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -31,8 +29,6 @@ import org.davidmason.zayf.cache.Mirror;
 import org.davidmason.zayf.config.ConfigLoader;
 import org.davidmason.zayf.controller.ServerConfigLoader;
 import org.davidmason.zayf.model.ServerInfo;
-import org.davidmason.zayf.rest.ServerProxy;
-import org.davidmason.zayf.rest.ServerProxyImpl;
 import org.davidmason.zayf.view.ServerSelectView;
 
 import com.google.inject.Inject;
@@ -49,18 +45,15 @@ class ServerSelectController implements ServerConfigLoader
 
    private ServerSelectView<?> view;
    private ProjectTreeController projectTreeController;
-   private DocumentsController docsController;
    private final Mirror mirror;
 
    @Inject
    ServerSelectController(ServerSelectView<?> sSView,
                           ProjectTreeController projectTreeController,
-                          DocumentsController docsController,
                           Mirror mirror)
    {
       this.view = sSView;
       this.projectTreeController = projectTreeController;
-      this.docsController = docsController;
       this.mirror = mirror;
 
       this.view.addLoadProjectListener(new ActionListener()
@@ -128,27 +121,11 @@ class ServerSelectController implements ServerConfigLoader
          return;
       }
 
-      URI uri;
-      try
-      {
-         uri = info.getServerUrl().toURI();
-      }
-      catch (URISyntaxException e)
-      {
-         // TODO show failure message in UI
-         // TODO clear projects tree, or add a heading so it shows which server is being displayed.
-         System.out.println("invalid URL for selected server");
-         return;
-      }
-
       // add server to database as a parent for any downloaded or tracked projects
       mirror.addServer(info);
 
-      ServerProxy proxy = new ServerProxyImpl(uri, info.getUserName(), info.getApiKey());
       // TODO hand this to project display controller
-      projectTreeController.fetchProjectList(proxy);
-      // FIXME normalize how server proxy is accessed
-      docsController.setServer(proxy);
+      projectTreeController.fetchProjectList(info);
    }
 
 }

@@ -45,7 +45,7 @@ import javax.swing.tree.DefaultTreeModel;
 import org.davidmason.zayf.persistence.FileIO;
 import org.davidmason.zayf.rest.DummyServerProxy;
 import org.davidmason.zayf.rest.ServerProxy;
-import org.davidmason.zayf.rest.ServerProxyImpl;
+import org.davidmason.zayf.rest.impl.ServerProxyImpl;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;

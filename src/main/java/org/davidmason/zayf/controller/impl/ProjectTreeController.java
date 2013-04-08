@@ -34,10 +34,11 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.apache.log4j.Logger;
-import org.davidmason.zayf.rest.ServerProxy;
+import org.davidmason.zayf.cache.Mirror;
+import org.davidmason.zayf.model.ServerInfo;
+import org.davidmason.zayf.rest.ServerProxyProvider;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.zanata.rest.dto.Project;
-import org.zanata.rest.dto.ProjectIteration;
 
 import com.google.inject.Inject;
 
@@ -54,20 +55,26 @@ class ProjectTreeController
    private Logger log = Logger.getLogger(ProjectTreeController.class);
 
    private ProjectTreeView<?> view;
-   private ServerProxy server;
+   private ServerInfo currentServer;
+   private final ServerProxyProvider proxyProvider;
+   private final Mirror mirror;
 
    // TODO use interface for this, and change to action listener pattern
    private ProjectDetailsController projectDetailsDisplayer;
 
+
    @Inject
    ProjectTreeController(ProjectTreeView<?> view,
-                         ProjectDetailsController projectDetailsController)
+                         ProjectDetailsController projectDetailsController,
+                         ServerProxyProvider proxyProvider,
+                         Mirror mirror)
    {
       this.view = view;
       this.projectDetailsDisplayer = projectDetailsController;
+      this.proxyProvider = proxyProvider;
+      this.mirror = mirror;
 
       view.addSelectionListener(buildProjectSelectionListener());
-
    }
 
    private TreeSelectionListener buildProjectSelectionListener()
@@ -92,7 +99,7 @@ class ProjectTreeController
 
             // only showing projects in tree
             Project project = (Project) node.getUserObject();
-            projectDetailsDisplayer.loadProject(project, server);
+            projectDetailsDisplayer.loadProject(currentServer, project);
          }
       };
       return listener;
@@ -101,10 +108,9 @@ class ProjectTreeController
    /**
     * Fetches the project list for the currently selected server
     */
-   public void fetchProjectList(final ServerProxy server)
+   public void fetchProjectList(final ServerInfo serverInfo)
    {
-      this.server = server;
-
+      this.currentServer = serverInfo;
       view.showProjectsLoading();
 
       // TODO cancel existing project list fetches when starting a new one?
@@ -112,12 +118,13 @@ class ProjectTreeController
       (new FetchProjectsWorker()).execute();
    }
 
-   private TreeModel fetchProjectsAndBuildModel(ServerProxy server)
+   private TreeModel fetchProjectsAndBuildModel()
    {
+
       // create model to populate
       DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
 
-      List<Project> projectList = server.getProjectList();
+      List<Project> projectList = proxyProvider.get(currentServer).getProjectList();
       Collections.sort(projectList, new Comparator<Project>()
       {
 
@@ -127,6 +134,28 @@ class ProjectTreeController
             return Collator.getInstance().compare(proj1.getName(), proj2.getName());
          }
       });
+
+      // TODO persist project list to database
+      //      could use linked-list from server to preserve sorted order
+      //      but that is arbitrary so may not want to bother storing that info
+      //
+      //      Make sure it is done in a way that fits with having extra info
+      //      on projects that are tracked or have been looked at in more
+      //      detail.
+      //
+      //      Basically store what we've got, note any changes (could show these
+      //      to users in an "activity" feed), and make sure it is compatible
+      //      with the storage of more information later.
+
+      for (Project project : projectList)
+      {
+         project.getId();
+         project.getDescription();
+         project.getName();
+         project.getIterations();
+         project.getStatus();
+         project.getType();
+      }
 
       List<DefaultMutableTreeNode> projectNodes = new ArrayList<DefaultMutableTreeNode>();
       for (Project project : projectList)
@@ -153,26 +182,26 @@ class ProjectTreeController
    }
 
    // Probably won't use this, but keeping the code here for reference on fetching iterations
-   private void populateProjectNodes(List<DefaultMutableTreeNode> projectNodes)
-   {
-      for (DefaultMutableTreeNode node : projectNodes)
-      {
-
-         // TODO: load child nodes on expansion only.
-         String projectId = ((Project) node.getUserObject()).getId();
-
-         List<ProjectIteration> versionList = server.getVersionList(projectId);
-         log.info("Got version list for project " + projectId);
-         if (versionList != null)
-         {
-            for (ProjectIteration version : versionList)
-            {
-               DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(version);
-               node.add(iterationBranch);
-            }
-         }
-      }
-   }
+//   private void populateProjectNodes(List<DefaultMutableTreeNode> projectNodes)
+//   {
+//      for (DefaultMutableTreeNode node : projectNodes)
+//      {
+//
+//         // TODO: load child nodes on expansion only.
+//         String projectId = ((Project) node.getUserObject()).getId();
+//
+//         List<ProjectIteration> versionList = serverProxy.getVersionList(projectId);
+//         log.info("Got version list for project " + projectId);
+//         if (versionList != null)
+//         {
+//            for (ProjectIteration version : versionList)
+//            {
+//               DefaultMutableTreeNode iterationBranch = new DefaultMutableTreeNode(version);
+//               node.add(iterationBranch);
+//            }
+//         }
+//      }
+//   }
 
    private class FetchProjectsWorker extends SwingWorker<TreeModel, Void>
    {
@@ -180,7 +209,7 @@ class ProjectTreeController
       @Override
       protected TreeModel doInBackground() throws Exception
       {
-         return fetchProjectsAndBuildModel(server);
+         return fetchProjectsAndBuildModel();
       }
 
       @Override

@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
+import org.davidmason.zayf.rest.impl.ServerProxyImpl;
 import org.zanata.rest.dto.Project;
 import org.zanata.rest.dto.ProjectIteration;
 import org.zanata.rest.dto.resource.ResourceMeta;
