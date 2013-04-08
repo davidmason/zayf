@@ -33,6 +33,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import org.apache.log4j.Logger;
 import org.davidmason.zayf.rest.ServerProxy;
 import org.davidmason.zayf.view.ProjectTreeView;
 import org.zanata.rest.dto.Project;
@@ -49,6 +50,8 @@ import com.google.inject.Inject;
  */
 class ProjectTreeController
 {
+
+   private Logger log = Logger.getLogger(ProjectTreeController.class);
 
    private ProjectTreeView<?> view;
    private ServerProxy server;
@@ -159,7 +162,7 @@ class ProjectTreeController
          String projectId = ((Project) node.getUserObject()).getId();
 
          List<ProjectIteration> versionList = server.getVersionList(projectId);
-         System.out.println("Got version list for project " + projectId);
+         log.info("Got version list for project " + projectId);
          if (versionList != null)
          {
             for (ProjectIteration version : versionList)
@@ -189,13 +192,14 @@ class ProjectTreeController
          }
          catch (InterruptedException e)
          {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("interrupted thread while fetching projects", e);
          }
          catch (ExecutionException e)
          {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            // FIXME show information on UI about failed server communication.
+            //       may need to check for type of e.getCause() to provide
+            //       different behaviour.
+            log.error("error in execution while fetching projects", e);
          }
       }
    }
