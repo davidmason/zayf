@@ -53,6 +53,9 @@ public class NeoMirrorModule extends AbstractModule
    {
       String dbPath = getDatabasePath();
       log.info("Starting database service at " + dbPath);
+      // FIXME handle locked database:
+      //        - probably another instance open, offer to close it
+      //        - possibly due to crash, look at option to force-unlock database before starting
       final GraphDatabaseService graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
       Runtime.getRuntime().addShutdownHook(new Thread()
       {

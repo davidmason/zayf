@@ -147,15 +147,7 @@ class ProjectTreeController
       //      to users in an "activity" feed), and make sure it is compatible
       //      with the storage of more information later.
 
-      for (Project project : projectList)
-      {
-         project.getId();
-         project.getDescription();
-         project.getName();
-         project.getIterations();
-         project.getStatus();
-         project.getType();
-      }
+      mirror.addProjectList(currentServer, projectList);
 
       List<DefaultMutableTreeNode> projectNodes = new ArrayList<DefaultMutableTreeNode>();
       for (Project project : projectList)

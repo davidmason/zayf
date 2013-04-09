@@ -62,7 +62,7 @@ public interface Mirror
     * 
     * @param serverInfo
     */
-   void addServer(ServerInfo serverInfo);
+   void addServer(ServerInfo server);
 
    /**
     * Add a project list to the mirror, associated with a specific server.
@@ -70,5 +70,5 @@ public interface Mirror
     * @param server
     * @param projects
     */
-   void addProjectList(String server, List<Project> projects);
+   void addProjectList(ServerInfo server, List<Project> projects);
 }

@@ -199,15 +199,11 @@ public class ServerProxyImpl implements ServerProxy
                                    debugLogging);
    }
 
-   /* (non-Javadoc)
-    * @see org.davidmason.zayf.rest.ServerProxy#getProjectList()
-    */
    @Override
    public List<Project> getProjectList()
    {
 
       URI restURI = getRestURI(serverURI);
-      log.info("Server rest uri for project list: " + restURI);
       IProjectsResource projectListResource = requestFactory.getProjects(restURI);
 
       ClientResponse<Project[]> projectListResponse = projectListResource.get();

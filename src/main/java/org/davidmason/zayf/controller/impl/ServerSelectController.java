@@ -112,7 +112,6 @@ class ServerSelectController implements ServerConfigLoader
       return loader.getServerInfo();
    }
 
-   // FIXME should have a single server proxy reference for all components
    private void updateServerAndLoadProjects(ServerInfo info)
    {
       if (info == null)
@@ -124,7 +123,6 @@ class ServerSelectController implements ServerConfigLoader
       // add server to database as a parent for any downloaded or tracked projects
       mirror.addServer(info);
 
-      // TODO hand this to project display controller
       projectTreeController.fetchProjectList(info);
    }
 
