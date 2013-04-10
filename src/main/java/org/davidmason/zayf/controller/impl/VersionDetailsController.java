@@ -76,6 +76,7 @@ class VersionDetailsController
       this.project = project;
       this.version = version;
       // TODO lookup and display stats and any other relevant info
+      // TODO persist stats etc. to mirror when they have been looked up
       view.displayVersion(version);
    }
 

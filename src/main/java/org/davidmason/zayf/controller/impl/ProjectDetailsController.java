@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 import javax.swing.SwingWorker;
 
 import org.apache.log4j.Logger;
+import org.davidmason.zayf.cache.Mirror;
 import org.davidmason.zayf.model.ServerInfo;
 import org.davidmason.zayf.rest.ServerProxyProvider;
 import org.davidmason.zayf.view.ProjectDetailsView;
@@ -52,15 +53,19 @@ class ProjectDetailsController
    private Project currentProject;
    private final ServerProxyProvider proxyProvider;
    private ServerInfo currentServer;
+   private final Mirror mirror;
+
 
    @Inject
    ProjectDetailsController(ProjectDetailsView<?> view,
                             VersionDetailsController versionDetailsController,
-                            ServerProxyProvider proxyProvider)
+                            ServerProxyProvider proxyProvider,
+                            Mirror mirror)
    {
       this.view = view;
       this.versionDisplayer = versionDetailsController;
       this.proxyProvider = proxyProvider;
+      this.mirror = mirror;
       versionList = null;
       setupVersionSelectionListener();
    }
@@ -115,7 +120,7 @@ class ProjectDetailsController
       {
          view.showVersionsLoading();
 
-         (new FetchVersionListWorker(project.getId())).execute();
+         (new FetchVersionListWorker()).execute();
       }
 
       // clear version display to avoid confusion
@@ -126,17 +131,16 @@ class ProjectDetailsController
    private class FetchVersionListWorker extends SwingWorker<List<ProjectIteration>, Void>
    {
 
-      private String projectId;
-
-      public FetchVersionListWorker(String projectId)
+      public FetchVersionListWorker()
       {
-         this.projectId = projectId;
       }
 
       @Override
       protected List<ProjectIteration> doInBackground() throws Exception
       {
-         return proxyProvider.get(currentServer).getVersionList(projectId);
+         List<ProjectIteration> versionList = proxyProvider.get(currentServer).getVersionList(currentProject.getId());
+         mirror.addVersionList(currentServer, currentProject, versionList);
+         return versionList;
       }
 
       @Override

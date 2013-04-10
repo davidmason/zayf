@@ -22,6 +22,8 @@ import java.util.List;
 
 import org.davidmason.zayf.model.ServerInfo;
 import org.zanata.rest.dto.Project;
+import org.zanata.rest.dto.ProjectIteration;
+import org.zanata.rest.dto.resource.ResourceMeta;
 
 /**
  * <p>
@@ -68,7 +70,33 @@ public interface Mirror
     * Add a project list to the mirror, associated with a specific server.
     * 
     * @param server
+    *           on which the project is hosted
     * @param projects
+    *           to add
     */
    void addProjectList(ServerInfo server, List<Project> projects);
+
+   /**
+    * Add a list of versions for a project to the mirror.
+    * 
+    * @param server
+    *           on which the project is hosted
+    * @param project
+    *           that is the parent of the versions
+    * @param versions
+    *           to add
+    */
+   void addVersionList(ServerInfo server, Project project,
+                       List<ProjectIteration> versions);
+
+   /**
+    * Add a list of documents for a version to the mirror.
+    * 
+    * @param server
+    * @param project
+    * @param version
+    * @param documents
+    */
+   void addDocumentList(ServerInfo server, Project project, ProjectIteration version,
+                        List<ResourceMeta> documents);
 }

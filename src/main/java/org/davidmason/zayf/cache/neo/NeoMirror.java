@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.davidmason.zayf.cache.Mirror;
 import org.davidmason.zayf.model.ServerInfo;
+import org.davidmason.zayf.util.Util;
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.Direction;
@@ -36,12 +37,64 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.Index;
 import org.zanata.rest.dto.Project;
+import org.zanata.rest.dto.ProjectIteration;
+import org.zanata.rest.dto.resource.ResourceMeta;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 /**
- * Standard Neo4j implementation of {@link Mirror}.
+ * <p>
+ * Standard Neo4j implementation of {@link Mirror}. This stores all data in a graph database with
+ * indexes.
+ * </p>
+ * 
+ * <p>
+ * Server reference node is attached to the main reference node by a uniquely typed relationship:
+ * 
+ * <pre>
+ * ref=node(0)
+ * ref-[:SERVER_ROOT]->serverRef
+ * </pre>
+ * 
+ * </p>
+ * 
+ * <p>
+ * Servers are attached to the server reference nodes and indexed by URL in index "servers":
+ * 
+ * <pre>
+ * serverRef<-[:ROOT]-server
+ * server=node:servers(url="http://...")
+ * </pre>
+ * 
+ * </p>
+ * 
+ * <p>
+ * Projects and versions are treated as nested project nodes to allow more flexible data models in
+ * future. Projects are attached to a server, and versions are attached to a project. Incoming
+ * relationships of type PROJECT characterize a project node. Both are indexed by id in the
+ * "projects" index:
+ * 
+ * <pre>
+ * server<-[:SERVER]-project<-[:PROJECT]-version<-[:PROJECT]-()
+ * project=node:projects(id="projectId")
+ * version=node:projects(id="versionId")
+ * </pre>
+ * 
+ * </p>
+ * 
+ * <p>
+ * Documents are attached to versions via one or more directory nodes, representing the internal
+ * directory structure of the project-version. The entire document-directory structure is connected
+ * to a top-level directory node that is attached to the version. Documents are indexed by path
+ * (full document name and path) under index "documents":
+ * 
+ * <pre>
+ * version<-[:PROJECT]-directory-[:DIRECTORY*]-document
+ * document=node:documents(path="full/path/and/name")
+ * </pre>
+ * 
+ * </p>
  * 
  * @author David Mason, dr.d.mason@gmail.com
  * 
@@ -51,10 +104,14 @@ public class NeoMirror implements Mirror
 
    private Logger log = Logger.getLogger(NeoMirror.class);
 
-   private static final String REFERENCE_NODES_INDEX_NAME = "ref";
-   private static final String REFERENCE_NODES_KEY = "ref";
    private static final String SERVERS_INDEX_NAME = "servers";
    private static final String SERVER_URL_KEY = "url";
+   private static final String PROJECTS_INDEX_NAME = "projects";
+   private static final String PROJECT_ID_KEY = "id";
+   private static final String DOCUMENTS_INDEX_NAME = "documents";
+   /** Represents full path, including document name. */
+   private static final String DOCUMENT_PATH_KEY = "path";
+
    private Provider<GraphDatabaseService> databaseProvider;
 
    /**
@@ -62,12 +119,19 @@ public class NeoMirror implements Mirror
     */
    private static enum RelTypes implements RelationshipType
    {
+      /** Node relationship to its reference node. e.g. server-[:ROOT]->serverRef */
       ROOT,
+      /** Relationship from reference node to the server reference node */
       SERVER_ROOT,
-      PROJECT_ROOT,
-      DOCUMENT_ROOT,
+      /**
+       * Relationship from any node to the server on which it is hosted (usually top-level projects)
+       */
       SERVER,
+      /** Relationship from a document or project to its parent project */
       PROJECT,
+      /** Relationship from a document or directory to its parent directory */
+      DIRECTORY,
+      /** Relationship from a text flow to its containing document */
       DOCUMENT
    }
 
@@ -75,114 +139,25 @@ public class NeoMirror implements Mirror
    public NeoMirror(Provider<GraphDatabaseService> databaseProvider)
    {
       this.databaseProvider = databaseProvider;
-      ensureDatabaseStructure();
-   }
-
-   /**
-    * Check for expected nodes and create any that are not present.
-    */
-   private void ensureDatabaseStructure()
-   {
-      GraphDatabaseService db = databaseProvider.get();
-      ExecutionEngine ee = new ExecutionEngine(db);
-      ee.execute("START root=node(0) " +
-                 "CREATE UNIQUE root-[:SERVER_ROOT]->(servers {name: 'Servers'})," +
-                 " root-[:PROJECT_ROOT]->(projects {name: 'Projects'})," +
-                 " root-[:DOCUMENT_ROOT]->(documents {name: 'Documents'})");
-
-      Index<Node> refNodesIndex = db.index().forNodes(REFERENCE_NODES_INDEX_NAME);
-
-      Node serverRef = getServerRef(db);
-      Node projectRef = getProjectRef(db);
-      Node docRef = getDocRef(db);
-
-      Transaction tx = db.beginTx();
-      try
-      {
-         refNodesIndex.putIfAbsent(serverRef, REFERENCE_NODES_KEY, "servers");
-         refNodesIndex.putIfAbsent(projectRef, REFERENCE_NODES_KEY, "projects");
-         refNodesIndex.putIfAbsent(docRef, REFERENCE_NODES_KEY, "documents");
-         tx.success();
-      }
-      finally
-      {
-         tx.finish();
-      }
-   }
-
-   private Node getDocRef(GraphDatabaseService db)
-   {
-      Node docRef =
-            db.getReferenceNode().getSingleRelationship(RelTypes.DOCUMENT_ROOT, Direction.OUTGOING)
-              .getEndNode();
-      return docRef;
-   }
-
-   private Node getProjectRef(GraphDatabaseService db)
-   {
-      Node projectRef =
-            db.getReferenceNode().getSingleRelationship(RelTypes.PROJECT_ROOT, Direction.OUTGOING)
-              .getEndNode();
-      return projectRef;
-   }
-
-   private Node getServerRef(GraphDatabaseService db)
-   {
-      Node serverRef =
-            db.getReferenceNode().getSingleRelationship(RelTypes.SERVER_ROOT, Direction.OUTGOING)
-              .getEndNode();
-      return serverRef;
-   }
-
-   // Example ways to access reference nodes
-   private void printAllReferenceNodes()
-   {
-      GraphDatabaseService db = databaseProvider.get();
-      Node refNode = db.getReferenceNode();
-      log.info("relationships from reference node");
-      for (Relationship rel : refNode.getRelationships())
-      {
-         log.info("relationship type: " + rel.getType() + " name: "
-                  + rel.getOtherNode(refNode).getProperty("name"));
-      }
-      log.info("nodes by lookup in reference index");
-      Index<Node> refNodesIndex = db.index().forNodes(REFERENCE_NODES_INDEX_NAME);
-      log.info(refNodesIndex.get(REFERENCE_NODES_KEY, "servers").getSingle().getProperty("name"));
-      log.info(refNodesIndex.get(REFERENCE_NODES_KEY, "projects").getSingle().getProperty("name"));
-      log.info(refNodesIndex.get(REFERENCE_NODES_KEY, "documents").getSingle().getProperty("name"));
-   }
-
-   private Node getServerNode(ServerInfo server)
-   {
-      return getServerNode(server.getServerUrl().toString());
-   }
-
-   private Node getServerNode(String url)
-   {
-      GraphDatabaseService db = databaseProvider.get();
-      Index<Node> serverIndex = db.index().forNodes(SERVERS_INDEX_NAME);
-      return serverIndex.get(SERVER_URL_KEY, url).getSingle();
    }
 
    @Override
    public void addServer(ServerInfo server)
    {
-      GraphDatabaseService db = databaseProvider.get();
-
       // DECISION: use URL as the unique identifier for a server
       // DECISION: map ServerInfo to properties on a node (don't serialize it directly)
       // DECISION: index servers and always look them up from the index by url
 
+      GraphDatabaseService db = databaseProvider.get();
       Index<Node> serverIndex = db.index().forNodes(SERVERS_INDEX_NAME);
 
-      // look up server
       String serverUrl = server.getServerUrl().toString();
       Node serverNode = serverIndex.get(SERVER_URL_KEY, serverUrl).getSingle();
 
-      Node serverRef = getServerRef(db);
       // create node for server if not present
       if (serverNode == null)
       {
+         Node serverRef = ensureServerRef(db);
          Transaction tx = db.beginTx();
          try
          {
@@ -199,27 +174,6 @@ public class NeoMirror implements Mirror
             tx.finish();
          }
       }
-
-      // update properties to reflect the values on serverInfo
-      // actually other properties may not be necessary, should not be storing data from the user
-      // ini file (privacy concerns if migrating the database). Could cache these things but
-      // they should really be a reflection of the ini file.
-//      server.setProperty(SERVER_NAME_KEY, serverInfo.getServerName());
-
-//      Traversal.traversal().relationships(RelTypes.ROOT, Direction.INCOMING).evaluator(Evaluators.excludeStartPosition()).evaluator(Evaluators.);
-//      ExecutionEngine ee = new ExecutionEngine(db);
-//      ee.execute("START root=node(" + serverRef.getId() + ") " +
-//                 "CREATE UNIQUE root<-[:ROOT]-(server {url: '" + serverInfo.getServerUrl() + "'})");
-
-//      refNode.trav
-
-//      Traversal.traversal().breadthFirst();
-//      db.
-
-      //      refNode.
-      // Add or update server
-//      db.
-
    }
 
    @Override
@@ -233,55 +187,27 @@ public class NeoMirror implements Mirror
       }
 
       GraphDatabaseService db = databaseProvider.get();
-      ExecutionEngine ee = new ExecutionEngine(db);
+      Index<Node> projectIndex = db.index().forNodes(PROJECTS_INDEX_NAME);
+
       for (Project project : projects)
       {
+         Node projectNode = getProjectNode(server, project);
 
-         // look up node for project
-         //
-         // alternatives:
-         //    could look up from project index, then check that it is related to serverNode
-         //       this could be handy for a quick check if there are any projects with the
-         //       given id.
-         //    could make a traversal from serverNode looking for the project id
-
-         ExecutionResult result =
-               ee.execute("START server=node({server}) " +
-                          "MATCH server<-[:SERVER]-project " +
-                          "WHERE project.id = {projectId}" +
-                          "RETURN project",
-                          paramMap("server", serverNode, "projectId", project.getId()));
-
-         Node projectNode;
-         Iterator<Node> resultIterator = result.<Node>columnAs("project");
-         if (resultIterator.hasNext())
+         if (projectNode == null)
          {
-//            log.info("Using existing node for project " + project.getId());
-            projectNode = resultIterator.next();
-         }
-         else
-         {
-//            log.info("No node for project " + project.getId() + ", creating.");
             Transaction tx = db.beginTx();
             try
             {
                projectNode = db.createNode();
                projectNode.setProperty("id", project.getId());
                projectNode.createRelationshipTo(serverNode, RelTypes.SERVER);
+               projectIndex.add(projectNode, PROJECT_ID_KEY, project.getId());
                tx.success();
             }
             finally
             {
                tx.finish();
             }
-
-            // TODO add project to projects index by name
-         }
-
-         if (resultIterator.hasNext())
-         {
-            log.warn("Matched more than 1 node for project " + project.getId()
-                     + ", expected 0 or 1.");
          }
 
          // add available project details
@@ -310,6 +236,301 @@ public class NeoMirror implements Mirror
          // possibly persist raw xml to a property?
 
       }
+   }
+
+   @Override
+   public void addVersionList(ServerInfo server, Project project, List<ProjectIteration> versions)
+   {
+      Node projectNode = getProjectNode(server, project);
+
+      GraphDatabaseService db = databaseProvider.get();
+      Index<Node> projectIndex = db.index().forNodes(PROJECTS_INDEX_NAME);
+
+      for (ProjectIteration version : versions)
+      {
+         Node versionNode = getVersionNode(server, project, version);
+
+         if (versionNode == null)
+         {
+            Transaction tx = db.beginTx();
+            try
+            {
+               versionNode = db.createNode();
+               versionNode.setProperty("id", version.getId());
+               versionNode.setProperty("name", version.getId());
+               versionNode.createRelationshipTo(projectNode, RelTypes.PROJECT);
+               projectIndex.add(versionNode, PROJECT_ID_KEY, version.getId());
+               tx.success();
+            }
+            finally
+            {
+               tx.finish();
+            }
+         }
+
+         Transaction tx = db.beginTx();
+         try
+         {
+            if (version.getStatus() != null)
+            {
+               versionNode.setProperty("status", version.getStatus().toString());
+            }
+            tx.success();
+         }
+         finally
+         {
+            tx.finish();
+         }
+
+         // possibly persist raw xml to a property?
+      }
+
+   }
+
+   @Override
+   public void addDocumentList(ServerInfo server, Project project, ProjectIteration version,
+                               List<ResourceMeta> documents)
+   {
+      Node versionNode = getVersionNode(server, project, version);
+
+      GraphDatabaseService db = databaseProvider.get();
+      ExecutionEngine ee = new ExecutionEngine(db);
+
+      // DECISION: every version has a single top-level directory node, to which all
+      //           documents for that version are ultimately linked.
+
+      Index<Node> docIndex = db.index().forNodes(DOCUMENTS_INDEX_NAME);
+
+      for (ResourceMeta doc : documents)
+      {
+         Node docNode = getDocumentNode(ee, versionNode, doc.getName());
+
+         if (docNode == null)
+         {
+            log.info("creating node for document " + doc.getName());
+            Transaction tx = db.beginTx();
+            try
+            {
+               String directoryPath = Util.getBeginningOfPath(doc.getName());
+               Node directoryNode = ensureDirectoryNodes(db, versionNode, directoryPath);
+
+               docNode = db.createNode();
+               docNode.setProperty(DOCUMENT_PATH_KEY, doc.getName());
+               docNode.setProperty("name", Util.getEndOfPath(doc.getName()));
+
+               docNode.createRelationshipTo(directoryNode, RelTypes.DIRECTORY);
+
+               docIndex.add(docNode, DOCUMENT_PATH_KEY, doc.getName());
+
+               tx.success();
+            }
+            finally
+            {
+               tx.finish();
+            }
+         }
+         else
+         {
+            log.info("found existing node for document " + doc.getName());
+         }
+
+         // set properties
+      }
+   }
+
+   /**
+    * Check for server root node and create if not present.
+    * 
+    * When this is complete, the database will have a reference node for servers, as well as any
+    * nodes that were already in the database.
+    * 
+    * @param db
+    * @return the server reference node
+    */
+   private Node ensureServerRef(GraphDatabaseService db)
+   {
+      Relationship relationshipRefToServerRef =
+            db.getReferenceNode().getSingleRelationship(RelTypes.SERVER_ROOT, Direction.OUTGOING);
+      Node serverRef;
+      if (relationshipRefToServerRef == null)
+      {
+         Transaction tx = db.beginTx();
+         try
+         {
+            serverRef = db.createNode();
+            serverRef.setProperty("name", "servers");
+            db.getReferenceNode().createRelationshipTo(serverRef, RelTypes.SERVER_ROOT);
+            tx.success();
+         }
+         finally
+         {
+            tx.finish();
+         }
+      }
+      else
+      {
+         serverRef = relationshipRefToServerRef.getEndNode();
+      }
+      return serverRef;
+   }
+
+   private Node getServerNode(ServerInfo server)
+   {
+      String url = server.getServerUrl().toString();
+      GraphDatabaseService db = databaseProvider.get();
+      Index<Node> serverIndex = db.index().forNodes(SERVERS_INDEX_NAME);
+      return serverIndex.get(SERVER_URL_KEY, url).getSingle();
+   }
+
+   private Node getProjectNode(ServerInfo server, Project project)
+   {
+      ExecutionEngine ee = new ExecutionEngine(databaseProvider.get());
+      ExecutionResult result =
+            ee.execute("START server=node:servers(url={serverUrl}), " +
+                       "project=node:projects(id={projectId}) " +
+                       "WHERE server<--project " +
+                       "RETURN project",
+                       paramMap("serverUrl", server.getServerUrl().toString(), "projectId",
+                                project.getId()));
+      return getSingleResult(result, "project");
+   }
+
+   private Node getVersionNode(ServerInfo server, Project project, ProjectIteration version)
+   {
+      ExecutionEngine ee = new ExecutionEngine(databaseProvider.get());
+
+      ExecutionResult result =
+            ee.execute("START server=node:servers(url={serverUrl}), " +
+                       "project=node:projects(id={projectId}), " +
+                       "version=node:projects(id={versionId}) " +
+                       "WHERE server<--project<--version " +
+                       "RETURN version",
+                       paramMap("serverUrl", server.getServerUrl(), "projectId", project.getId(),
+                                "versionId", version.getId()));
+
+      return getSingleResult(result, "version");
+   }
+
+   /**
+    * Requires neo4j transaction.
+    * 
+    * @param db
+    * @param ee
+    * @param versionNode
+    * @return
+    */
+   private Node ensureTopLevelNode(GraphDatabaseService db, ExecutionEngine ee, Node versionNode)
+   {
+      ExecutionResult result = ee.execute("START version=node({versionNode}) " +
+                                          "MATCH version<-[:PROJECT]-topLevelDir " +
+                                          "RETURN topLevelDir",
+                                          paramMap("versionNode", versionNode));
+
+      Node topLevelDirNode = getSingleResult(result, "topLevelDir");
+
+      if (topLevelDirNode == null)
+      {
+         topLevelDirNode = db.createNode();
+         topLevelDirNode.setProperty("path", "");
+         topLevelDirNode.setProperty("name", "/");
+         topLevelDirNode.createRelationshipTo(versionNode, RelTypes.PROJECT);
+      }
+      return topLevelDirNode;
+   }
+
+   /**
+    * Requires neo4j transaction.
+    * 
+    * @param db
+    * @param versionNode
+    * @param directoryPath
+    * @return
+    * 
+    * @see {@link org.davidmason.zayf.controller.impl.DocumentsController#addPathNodes(...)}
+    */
+   private Node
+         ensureDirectoryNodes(GraphDatabaseService db, Node versionNode, String directoryPath)
+   {
+      ExecutionEngine ee = new ExecutionEngine(db);
+
+      if (directoryPath.isEmpty())
+      {
+         return ensureTopLevelNode(db, ee, versionNode);
+      }
+
+      String dirName = Util.getEndOfPath(directoryPath);
+      String parentPath = Util.getBeginningOfPath(directoryPath);
+
+      Node parentDirNode = ensureDirectoryNodes(db, versionNode, parentPath);
+
+      ExecutionResult result =
+            ee.execute("START parentDir=node({parentNode}) " +
+                       "MATCH parentDir<-[:DIRECTORY]-dir " +
+                       "WHERE dir.path = {dirPath} " +
+                       "RETURN dir",
+                       paramMap("parentNode", parentDirNode, "dirPath", directoryPath));
+
+      Node dirNode = getSingleResult(result, "dir");
+
+      if (dirNode == null)
+      {
+         dirNode = db.createNode();
+         dirNode.setProperty("path", directoryPath);
+         dirNode.setProperty("name", dirName);
+
+         dirNode.createRelationshipTo(parentDirNode, RelTypes.DIRECTORY);
+      }
+      return dirNode;
+   }
+
+   private Node getDocumentNode(ExecutionEngine ee, Node versionNode, String fullPathAndName)
+   {
+      ExecutionResult result =
+            ee.execute("START version=node({versionNode}), doc=node:documents(path={docPath}) " +
+                       "WHERE version<-[:PROJECT]-()<-[:DIRECTORY*]-doc " +
+                       "RETURN doc",
+                       paramMap("versionNode", versionNode, "docPath", fullPathAndName));
+
+      Node docNode = getSingleResult(result, "doc");
+      return docNode;
+   }
+
+   /**
+    * Return a single result for a named return parameter. This method expects only a single result
+    * and will log errors if additional results are encountered.
+    * 
+    * @param result
+    * @param returnParamName
+    * @return the result node if any, otherwise null.
+    */
+   private Node getSingleResult(ExecutionResult result, String returnParamName)
+   {
+      Node match = null;
+      Iterator<Node> resultIterator = result.<Node>columnAs(returnParamName);
+      if (resultIterator.hasNext())
+      {
+         match = resultIterator.next();
+      }
+      while (resultIterator.hasNext())
+      {
+         // FIXME throw exception in this case.
+         log.error("found additional match for '" + returnParamName + "'");
+         Node extraNode = resultIterator.next();
+         for (String key : extraNode.getPropertyKeys())
+         {
+            log.error("    " + key + ": " + extraNode.getProperty(key));
+         }
+      }
+      return match;
+   }
+
+   // TODO replace with chainable method taking just 2 parameters
+   private Map<String, Object> paramMap(String key1, Object value1, String key2, Object value2,
+                                        String key3, Object value3)
+   {
+      Map<String, Object> params = paramMap(key1, value1, key2, value2);
+      params.put(key3, value3);
+      return params;
    }
 
    private Map<String, Object> paramMap(String key1, Object value1, String key2, Object value2)

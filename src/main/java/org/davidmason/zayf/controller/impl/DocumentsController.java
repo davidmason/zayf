@@ -64,11 +64,9 @@ class DocumentsController
 
    public void fetchDocumentList(ServerInfo server, Project project, ProjectIteration version)
    {
-      String projectId = project.getId();
-      String versionId = version.getId();
-      view.setTitle(project.getName() + " : " + versionId);
+      view.setTitle(project.getName() + " : " + version.getId());
       view.showDocumentsLoading();
-      (new FetchDocumentListWorker(server, projectId, versionId)).execute();
+      (new FetchDocumentListWorker(server, project, version)).execute();
    }
 
    private static DefaultTreeModel buildTreeModel(String projectId, String versionId,
@@ -108,7 +106,7 @@ class DocumentsController
          DefaultMutableTreeNode docNode = new DefaultMutableTreeNode(doc, false);
 
          DefaultMutableTreeNode pathNode =
-               addPathNodes(rootNode, pathNodes, getBeginningOfPath(doc.getName()));
+               addPathNodes(rootNode, pathNodes, Util.getBeginningOfPath(doc.getName()));
          pathNode.add(docNode);
       }
 
@@ -141,7 +139,7 @@ class DocumentsController
       pathNodes.put(pathNoTrailingSlash, pathNode);
 
       DefaultMutableTreeNode parentNode;
-      String parentPath = getBeginningOfPath(pathNoTrailingSlash);
+      String parentPath = Util.getBeginningOfPath(pathNoTrailingSlash);
       if (parentPath.isEmpty())
       {
          parentNode = rootNode;
@@ -154,40 +152,28 @@ class DocumentsController
       return pathNode;
    }
 
-   private static String getBeginningOfPath(String path)
-   {
-      int finalSlash = path.lastIndexOf('/');
-      if (finalSlash == -1)
-      {
-         return "";
-      }
-      if (finalSlash != path.length() - 1 && finalSlash != 0)
-      {
-         return path.substring(0, finalSlash);
-      }
-      throw new RuntimeException("Slash on start or end of path: " + path);
-   }
-
    private class FetchDocumentListWorker extends SwingWorker<TreeModel, Void>
    {
 
       private ServerInfo serverInfo;
-      private String projectId;
-      private String versionId;
+      private Project project;
+      private ProjectIteration version;
 
-      public FetchDocumentListWorker(ServerInfo serverInfo, String projectId, String versionId)//, ServerProxy server)
+      public FetchDocumentListWorker(ServerInfo serverInfo, Project project, ProjectIteration version)
       {
          this.serverInfo = serverInfo;
-         this.projectId = projectId;
-         this.versionId = versionId;
+         this.project = project;
+         this.version = version;
       }
 
       @Override
       protected TreeModel doInBackground() throws Exception
       {
          List<ResourceMeta> documents =
-               proxyProvider.get(serverInfo).getDocList(projectId, versionId);
-         return buildTreeModel(projectId, versionId, documents);
+               proxyProvider.get(serverInfo).getDocList(project.getId(), version.getId());
+         mirror.addDocumentList(serverInfo, project, version, documents);
+
+         return buildTreeModel(project.getId(), version.getId(), documents);
       }
 
       @Override

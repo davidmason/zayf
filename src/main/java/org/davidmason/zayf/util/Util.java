@@ -27,6 +27,11 @@ package org.davidmason.zayf.util;
 public class Util
 {
 
+   /**
+    * 
+    * @param path
+    * @return everything after the final '/' in path, or the entire path if path contains no '/'.
+    */
    public static String getEndOfPath(String path)
    {
       int finalSlash = path.lastIndexOf("/");
@@ -39,5 +44,25 @@ public class Util
          return path.substring(finalSlash + 1);
       }
       throw new RuntimeException("Slash on end of path: " + path);
+   }
+
+   /**
+    * 
+    * @param path
+    * @return path with the final '/' and everything following it omitted, or an empty string if
+    *         the string contains no '/'.
+    */
+   public static String getBeginningOfPath(String path)
+   {
+      int finalSlash = path.lastIndexOf('/');
+      if (finalSlash == -1)
+      {
+         return "";
+      }
+      if (finalSlash != path.length() - 1 && finalSlash != 0)
+      {
+         return path.substring(0, finalSlash);
+      }
+      throw new RuntimeException("Slash on start or end of path: " + path);
    }
 }
